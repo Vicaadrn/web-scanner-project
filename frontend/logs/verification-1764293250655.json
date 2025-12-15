@@ -1,0 +1,6 @@
+{
+  "email": "adranipika@gmail.com",
+  "verificationUrl": "http://localhost:3000/api/auth/verify?token=1d0cf8c6946ed9d61c8f448dcea22e940de24fdd119decddf2205452d42cb6ee",
+  "timestamp": "2025-11-28T01:27:30.655Z",
+  "token": "1d0cf8c6946ed9d61c8f448dcea22e940de24fdd119decddf2205452d42cb6ee"
+}

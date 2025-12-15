@@ -1,0 +1,6 @@
+{
+  "email": "ayang@gmail.com",
+  "verificationUrl": "http://localhost:3000/api/auth/verify?token=b9ede4e29a281dc7a6ba8f5db490fbc0bbc6eca0b1ab4b8bbb6c9f1e7f34a9bb",
+  "timestamp": "2025-12-11T07:51:31.461Z",
+  "token": "b9ede4e29a281dc7a6ba8f5db490fbc0bbc6eca0b1ab4b8bbb6c9f1e7f34a9bb"
+}

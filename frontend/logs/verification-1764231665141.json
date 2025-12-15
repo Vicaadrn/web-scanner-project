@@ -1,0 +1,6 @@
+{
+  "email": "vicaguneven@gmail.com",
+  "verificationUrl": "http://localhost:3000/api/auth/verify?token=f1192b657334dcfb012506a6bce4ae984c3d8a18c57505af48214ef0551c891e",
+  "timestamp": "2025-11-27T08:21:05.141Z",
+  "token": "f1192b657334dcfb012506a6bce4ae984c3d8a18c57505af48214ef0551c891e"
+}

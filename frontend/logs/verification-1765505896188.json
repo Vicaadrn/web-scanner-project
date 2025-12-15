@@ -1,0 +1,6 @@
+{
+  "email": "yey@gmail.com",
+  "verificationUrl": "http://localhost:3000/api/auth/verify?token=437f196a7b9103c7b592df1d3d8f95207a392ba587a21b6b0f575ad8f22a2c39",
+  "timestamp": "2025-12-12T02:18:16.188Z",
+  "token": "437f196a7b9103c7b592df1d3d8f95207a392ba587a21b6b0f575ad8f22a2c39"
+}

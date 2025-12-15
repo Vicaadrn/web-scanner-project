@@ -1,0 +1,2837 @@
+wordpress
+joomla
+drupal
+magento
+prestashop
+shopify
+woocommerce
+ghost
+wix
+squarespace
+webflow
+opencart
+blogger
+blogspot
+medium
+substack
+strapi
+contentful
+sanity
+prismic
+kontent
+buttercms
+graphcms
+directus
+payloadcms
+keystone
+netlifycms
+decapcms
+storyblok
+craftcms
+expressionengine
+cockpit
+getcrafty
+popoji
+a-cms
+kodi
+sitti
+q-cms
+phpmu
+local-cms
+
+# WORDPRESS PATHS
+wp-admin
+wp-content
+wp-includes
+wp-json
+wp-login
+wp-cron
+wp-mail
+wp-signup
+xmlrpc.php
+wp-load.php
+wp-config.php
+wp-blog-header.php
+wp-trackback.php
+wp-comments-post.php
+wp-activate.php
+wp-links-opml.php
+wp-config-sample.php
+
+# WORDPRESS THEMES
+twentytwentyfour
+twentytwentythree
+twentytwentytwo
+twentytwentyone
+twentytwenty
+twentynineteen
+twentyseventeen
+twentysixteen
+twentyfifteen
+twentyfourteen
+twentythirteen
+twentytwelve
+twentyeleven
+twentyten
+astra
+oceanwp
+generatepress
+avada
+divi
+enfold
+the7
+bridge
+betheme
+woodmart
+flatsome
+salient
+xstore
+porto
+newspaper
+newsmag
+
+# WORDPRESS PLUGINS
+akismet
+contact-form-7
+yoast-seo
+wordfence
+elementor
+divi-builder
+gravity-forms
+formidable
+all-in-one-seo
+jetpack
+wp-rocket
+w3-total-cache
+wp-super-cache
+really-simple-ssl
+redirection
+advanced-custom-fields
+tablepress
+nextgen-gallery
+wordpress-importer
+duplicator
+updraftplus
+backwpup
+
+# JOOMLA PATHS
+administrator
+components
+modules
+plugins
+templates
+images
+media
+cache
+libraries
+includes
+cli
+bin
+language
+tmp
+logs
+configuration.php
+htaccess.txt
+web.config.txt
+index.php?option=com_
+
+# JOOMLA COMPONENTS
+com_content
+com_users
+com_contact
+com_banners
+com_newsfeeds
+com_weblinks
+com_search
+com_finder
+com_tags
+com_config
+com_ajax
+com_admin
+com_login
+com_wrapper
+com_media
+com_menus
+com_redirect
+com_templates
+com_checkin
+
+# JOOMLA TEMPLATES
+protostar
+beez3
+hathor
+isis
+atomic
+ja_purity
+gantry
+helix
+wright
+yootheme
+warptheme
+shaper
+
+# DRUPAL PATHS
+sites/all
+sites/default
+modules
+themes
+profiles
+includes
+misc
+core
+scripts
+update.php
+install.php
+cron.php
+authorize.php
+
+# DRUPAL MODULES
+node
+user
+taxonomy
+block
+system
+filter
+field
+file
+image
+path
+search
+contact
+dashboard
+help
+menu
+toolbar
+overlay
+shortcut
+contextual
+automated_cron
+aggregator
+
+# DRUPAL THEMES
+bartik
+garland
+seven
+stark
+zen
+adaptivetheme
+omega
+aurora
+bootstrap
+
+# E-COMMERCE CMS
+bigcommerce
+ecwid
+volusion
+x-cart
+zen-cart
+oscommerce
+loaded7
+abantecart
+cubeCart
+PinnacleCart
+Ubercart
+DrupalCommerce
+
+# MAGENTO SPECIFIC
+magento_version
+magento_admin
+magento_api
+magento_install
+skin/frontend
+js/mage
+media/catalog
+var/report
+downloader
+app/etc/local.xml
+
+# PRESTASHOP SPECIFIC
+config/settings.inc.php
+img/p
+themes
+modules
+override
+upload
+download
+
+# ADMIN PATHS
+dashboard
+panel
+controlpanel
+cp
+backend
+manager
+signin
+auth
+account
+my-account
+joomla/administrator
+drupal/admin
+magento/admin
+prestashop/admin
+opencart/admin
+strapi/admin
+directus/admin
+
+# FILE PATTERNS
+readme.html
+license.txt
+settings.php
+local.xml
+config.xml
+manifest.json
+package.json
+composer.json
+composer.lock
+yarn.lock
+
+# DATABASE FILES
+database.sql
+backup.sql
+dump.sql
+mysql.sql
+db-backup.sql
+database-backup.sql
+sql-backup.sql
+backup-database.sql
+db.sql
+data.sql
+
+# SECURITY FILES
+wp-config.php.bak
+configuration.php.bak
+settings.php.bak
+.local.xml.bak
+.htaccess.bak
+web.config.bak
+.backup
+.old
+.orig
+.save
+.tmp
+.temp
+
+# STATISTICS/ANALYTICS
+phpmyadmin
+mysql
+pma
+dbadmin
+adminer
+myadmin
+webadmin
+sql
+database
+db
+phpMyAdmin
+php-my-admin
+phpmy-admin
+mysql-admin
+
+# API ENDPOINTS
+wp-json/wp/v2
+wp-json/oembed
+wp-json/contact-form-7
+joomla/api
+drupal/api
+magento/rest
+prestashop/api
+ghost/api
+strapi/api
+directus/api
+graphql
+
+# BACKUP PATTERNS
+backup-
+backup_
+-backup
+_backup
+.bak
+.backup
+.back
+.old
+.orig
+.original
+.save
+.tmp
+.temp
+
+# UPDATE PATHS
+update.php
+upgrade.php
+install.php
+setup.php
+update
+upgrade
+install
+setup
+maint
+maintenance
+
+# CMS DETECTION STRINGS
+generator="wordpress
+generator="joomla
+generator="drupal
+powered by wordpress
+powered by joomla
+powered by drupal
+content="wordpress
+content="joomla
+content="drupal
+wp-embed
+joomla-script
+drupal-settings
+magento/banner
+prestashop-button
+woocommerce-no-js
+
+# CACHE AND LOGS
+cache
+logs
+tmp
+temp
+sessions
+var/cache
+var/log
+var/session
+var/tmp
+var/report
+
+# UPLOAD DIRECTORIES
+uploads
+upload
+media
+images
+pictures
+photos
+assets
+static
+files
+documents
+attachments
+
+# CONFIGURATION DIRECTORIES
+config
+configuration
+conf
+settings
+etc
+app/config
+application/config
+system/config
+
+# LANGUAGE AND LOCALIZATION
+language
+languages
+lang
+locale
+localization
+i18n
+translation
+translations
+
+# PLUGIN/MODULE PATHS
+plugins
+modules
+components
+extensions
+addons
+widgets
+blocks
+bundles
+packages
+
+# THEME/TEMPLATE PATHS
+themes
+templates
+skins
+layouts
+views
+styles
+css
+stylesheets
+
+# VERSION FILES
+version.txt
+version.json
+changelog.txt
+changelog.md
+release_notes.txt
+VERSION
+CHANGELOG
+RELEASE_NOTES
+
+# INSTALLATION FILES
+install
+installation
+setup
+setup.php
+install.php
+installer
+setup-wizard
+installation-wizard
+
+# MIGRATION FILES
+migration
+migrations
+migrate
+db/migrations
+database/migrations
+migration.sql
+
+# TEST AND DEVELOPMENT
+test
+tests
+testing
+dev
+development
+demo
+debug
+staging
+beta
+alpha
+
+# CUSTOM DIRECTORIES
+custom
+customs
+customizer
+customize
+personal
+personalization
+user-custom
+
+# BACKUP DIRECTORIES
+backups
+backup-files
+backup-data
+database-backups
+file-backups
+system-backup
+site-backup
+
+# EXPORT DIRECTORIES
+export
+exports
+exported
+downloads
+download
+export-files
+export-data
+
+# IMPORT DIRECTORIES
+import
+imports
+imported
+upload-import
+import-files
+import-data
+
+# TEMPORARY DIRECTORIES
+temp
+tmp
+temporary
+temporarily
+scratch
+workspace
+
+# ARCHIVE DIRECTORIES
+archive
+archives
+archived
+old-files
+old-data
+historical
+history
+
+# SHARED DIRECTORIES
+shared
+common
+public
+global
+universal
+general
+
+# PRIVATE DIRECTORIES
+private
+secured
+protected
+restricted
+confidential
+sensitive
+
+# SYSTEM DIRECTORIES
+system
+sys
+core
+kernel
+framework
+engine
+platform
+
+# APPLICATION DIRECTORIES
+application
+app
+apps
+webapp
+webapps
+service
+services
+
+# DATA DIRECTORIES
+data
+datas
+database
+databases
+db
+dbs
+datastore
+storage
+
+# CONTENT DIRECTORIES
+content
+contents
+post
+posts
+article
+articles
+blog
+blogs
+news
+pages
+
+# USER DIRECTORIES
+user
+users
+member
+members
+account
+accounts
+profile
+profiles
+customer
+customers
+
+# ADMINISTRATION DIRECTORIES
+admin
+administrator
+administration
+manager
+management
+control
+controller
+supervisor
+moderator
+
+# API DIRECTORIES
+api
+apis
+rest
+restapi
+graphql
+soap
+jsonapi
+xmlapi
+
+# WEB SERVICES
+webservice
+webservices
+webapi
+web-apis
+service-api
+api-service
+
+# MOBILE DIRECTORIES
+mobile
+mobiles
+mob
+android
+ios
+iphone
+ipad
+tablet
+smartphone
+
+# THIRD-PARTY INTEGRATIONS
+thirdparty
+third-party
+external
+externals
+integration
+integrations
+connector
+connectors
+bridge
+bridges
+
+# PAYMENT DIRECTORIES
+payment
+payments
+pay
+pays
+billing
+billings
+invoice
+invoices
+checkout
+cart
+carts
+
+# SOCIAL MEDIA INTEGRATIONS
+social
+socials
+facebook
+twitter
+instagram
+linkedin
+youtube
+google
+facebook-connect
+twitter-api
+
+# SEARCH DIRECTORIES
+search
+searches
+finder
+finders
+lookup
+query
+queries
+explorer
+
+# SECURITY DIRECTORIES
+security
+secure
+protection
+guard
+defender
+firewall
+shield
+safety
+
+# PERFORMANCE DIRECTORIES
+performance
+optimization
+optimize
+speed
+fast
+accelerator
+cache
+caching
+
+# ANALYTICS DIRECTORIES
+analytics
+analysis
+statistics
+stats
+metrics
+measurement
+tracking
+tracker
+
+# MARKETING DIRECTORIES
+marketing
+market
+promotion
+promotions
+advert
+adverts
+advertisement
+advertisements
+
+# COMMUNICATION DIRECTORIES
+communication
+communications
+message
+messages
+chat
+chats
+messaging
+contact
+contacts
+
+# DOCUMENTATION DIRECTORIES
+documentation
+doc
+docs
+document
+documents
+help
+helps
+support
+supports
+guide
+guides
+manual
+manuals
+
+# LEGAL DIRECTORIES
+legal
+legals
+terms
+conditions
+policy
+policies
+privacy
+disclaimer
+disclaimers
+
+# MEDIA SPECIFIC DIRECTORIES
+image
+images
+picture
+pictures
+photo
+photos
+gallery
+galleries
+video
+videos
+audio
+audios
+music
+musics
+file
+files
+document
+documents
+
+# DEVELOPMENT TOOLS
+dev
+developer
+developers
+development
+debug
+debugging
+test
+testing
+qa
+quality
+build
+builder
+
+# VERSION CONTROL
+git
+svn
+mercurial
+hg
+bazaar
+bzr
+cvs
+version-control
+
+# PACKAGE MANAGERS
+npm
+yarn
+composer
+pip
+gem
+nuget
+maven
+gradle
+
+# BUILD TOOLS
+webpack
+gulp
+grunt
+browserify
+parcel
+rollup
+vite
+
+# FRAMEWORK SPECIFICS
+laravel
+symfony
+cakephp
+yii
+zend
+codeigniter
+express
+django
+flask
+rubyonrails
+spring
+aspnet
+
+# CLOUD SERVICES
+aws
+amazon
+google-cloud
+azure
+cloud
+cloudflare
+akamai
+fastly
+
+# MONITORING
+monitor
+monitoring
+status
+health
+healthcheck
+ping
+ready
+live
+
+# MAINTENANCE
+maintenance
+maint
+offline
+construction
+building
+comingsoon
+soon
+
+# ERROR PAGES
+error
+errors
+404
+500
+403
+401
+400
+503
+
+# REDIRECTION
+redirect
+redirection
+go
+goto
+url
+link
+links
+
+# AUTHENTICATION
+auth
+authentication
+login
+signin
+signup
+register
+registration
+logout
+signout
+
+# SESSION MANAGEMENT
+session
+sessions
+token
+tokens
+cookie
+cookies
+cache
+caches
+
+# NOTIFICATION
+notification
+notifications
+alert
+alerts
+notice
+notices
+message
+messages
+
+# SUBSCRIPTION
+subscription
+subscriptions
+subscribe
+subscriber
+subscribers
+newsletter
+newsletters
+
+# FEED
+feed
+feeds
+rss
+atom
+xml
+jsonfeed
+
+# SITEMAP
+sitemap
+sitemaps
+sitemap.xml
+sitemap_index.xml
+
+# ROBOTS
+robots
+robots.txt
+robot.txt
+
+# MANIFEST
+manifest
+manifest.json
+manifest.webmanifest
+
+# SECURITY.TXT
+security.txt
+.security.txt
+well-known/security.txt
+
+# HUMANS.TXT
+humans.txt
+humans.text
+
+# ADS.TXT
+ads.txt
+ads.text
+
+# OPEN SEARCH
+opensearch
+opensearch.xml
+
+# FAVICON
+favicon.ico
+favicon.png
+apple-touch-icon.png
+
+# BROWSERCONFIG
+browserconfig.xml
+browserconfig
+
+# CROSSDOMAIN
+crossdomain.xml
+crossdomain
+
+# CLIENTACCESS
+clientaccesspolicy.xml
+clientaccesspolicy
+
+# WEBMASTER TOOLS
+google-site-verification
+bing-site-auth
+yandex-verification
+baidu-verification
+
+# CDN PATHS
+cdn
+cdns
+static
+assets
+resources
+resource
+min
+minified
+combined
+concat
+
+# FONT DIRECTORIES
+font
+fonts
+webfonts
+icon
+icons
+glyph
+glyphs
+symbol
+symbols
+
+# STYLESHEET DIRECTORIES
+css
+styles
+stylesheets
+style
+themes
+skins
+appearance
+
+# JAVASCRIPT DIRECTORIES
+js
+javascript
+scripts
+script
+bundles
+packages
+modules
+
+# VENDOR DIRECTORIES
+vendor
+vendors
+lib
+libs
+library
+libraries
+package
+packages
+
+# BOWER COMPONENTS
+bower_components
+bower-components
+bower
+
+# NODE MODULES
+node_modules
+node-modules
+node
+
+# COMPOSER VENDOR
+vendor
+composer/vendor
+
+# PYTHON PACKAGES
+site-packages
+dist-packages
+python-packages
+
+# RUBY GEMS
+gems
+ruby-gems
+gemfiles
+
+# JAVA JARS
+jar
+jars
+war
+wars
+ear
+ears
+
+# DOTNET ASSEMBLIES
+bin
+obj
+assemblies
+dll
+dlls
+exe
+exes
+
+# DOCKER
+docker
+dockerfile
+docker-compose
+.dockerignore
+
+# KUBERNETES
+kubernetes
+k8s
+kube
+helm
+chart
+charts
+
+# TERRAFORM
+terraform
+tf
+.tf
+.terraform
+
+# ANSIBLE
+ansible
+playbook
+playbooks
+roles
+
+# PUPPET
+puppet
+manifests
+modules
+
+# CHEF
+chef
+cookbooks
+recipes
+
+# VAGRANT
+vagrant
+Vagrantfile
+.vagrant
+
+# JENKINS
+jenkins
+.jenkins
+jenkinsfile
+
+# GITLAB
+gitlab
+.gitlab
+gitlab-ci
+
+# GITHUB
+github
+.github
+github-actions
+
+# BITBUCKET
+bitbucket
+.bitbucket
+bitbucket-pipelines
+
+# TRAVIS
+travis
+.travis
+travis-ci
+
+# CIRCLECI
+circleci
+.circleci
+circle-config
+
+# AZURE DEVOPS
+azure-pipelines
+azure-devops
+.azure
+
+# AWS CODE
+buildspec.yml
+.buildspec
+aws-code
+
+# GOOGLE CLOUD BUILD
+cloudbuild.yaml
+.cloudbuild
+gcp-build
+
+# WEBHOOKS
+webhook
+webhooks
+hook
+hooks
+callback
+callbacks
+
+# AUTOMATION
+automation
+automate
+auto
+bot
+bots
+robot
+robots
+
+# SCHEDULER
+scheduler
+schedulers
+cron
+crond
+crontab
+schedule
+
+# QUEUE
+queue
+queues
+job
+jobs
+task
+tasks
+worker
+workers
+
+# EVENT
+event
+events
+listener
+listeners
+handler
+handlers
+
+# STREAM
+stream
+streams
+live
+realtime
+real-time
+websocket
+websockets
+
+# BROADCAST
+broadcast
+broadcasts
+multicast
+unicast
+anycast
+
+# PUBLISH
+publish
+publishes
+publisher
+publishers
+pubsub
+
+# SUBSCRIBE
+subscribe
+subscribes
+subscriber
+subscribers
+
+# NOTIFY
+notify
+notifies
+notification
+notifications
+alert
+alerts
+
+# LOG
+log
+logs
+logger
+loggers
+logging
+audit
+audits
+audit-trail
+
+# METRIC
+metric
+metrics
+measure
+measures
+measurement
+measurements
+
+# HEALTH
+health
+healthcheck
+health-check
+ready
+readiness
+live
+liveness
+status
+wellness
+
+# PERFORMANCE
+performance
+perf
+benchmark
+benchmarks
+speed
+velocity
+throughput
+
+# LOAD
+load
+loading
+loader
+loaders
+spinner
+spinners
+progress
+progressbar
+
+# LAZY
+lazy
+lazyload
+lazy-load
+defer
+deferred
+async
+asynchronous
+
+# OFFLINE
+offline
+offline-mode
+offline-storage
+offline-cache
+
+# SYNC
+sync
+synchronize
+synchronization
+sync-data
+sync-files
+
+# BACKUP
+backup
+backups
+backup-now
+backup-create
+backup-download
+
+# RESTORE
+restore
+restores
+restore-point
+restore-backup
+restore-data
+
+# EXPORT
+export
+exports
+export-data
+export-files
+export-download
+
+# IMPORT
+import
+imports
+import-data
+import-files
+import-upload
+
+# MIGRATE
+migrate
+migration
+migrations
+migrate-data
+migrate-database
+
+# DEPLOY
+deploy
+deployment
+deployments
+deploy-now
+deploy-live
+
+# ROLLBACK
+rollback
+rollbacks
+revert
+reverts
+undo
+undos
+
+# SCALE
+scale
+scaling
+autoscale
+auto-scale
+scale-up
+scale-down
+
+# CONFIG
+config
+configs
+configuration
+configurations
+settings
+preferences
+options
+
+# ENV
+env
+environment
+environments
+.env
+environment.txt
+
+# FEATURE
+feature
+features
+feature-flag
+feature-flags
+feature-toggle
+
+# EXPERIMENT
+experiment
+experiments
+ab-test
+ab-testing
+split-test
+
+# PREVIEW
+preview
+previews
+demo
+demos
+sandbox
+sandboxes
+
+# STAGING
+staging
+stage
+preprod
+pre-production
+uat
+user-acceptance
+
+# PRODUCTION
+production
+prod
+live
+production-ready
+go-live
+
+# DEVELOPMENT
+development
+dev
+develop
+developer
+developers
+coding
+programming
+
+# TESTING
+testing
+test
+tests
+qa
+quality
+quality-assurance
+
+# DEBUGGING
+debug
+debugging
+debugger
+debuggers
+troubleshoot
+troubleshooting
+
+# PROFILING
+profile
+profiling
+profiler
+profilers
+performance-profile
+
+# MONITORING
+monitor
+monitoring
+monitors
+observability
+observable
+watch
+watchers
+
+# ALERTING
+alert
+alerts
+alerting
+notify
+notification
+notifications
+
+# REPORTING
+report
+reports
+reporting
+analytics
+analysis
+insights
+
+# DASHBOARD
+dashboard
+dashboards
+console
+consoles
+control-panel
+admin-panel
+
+# WIDGET
+widget
+widgets
+gadget
+gadgets
+module
+modules
+component
+components
+
+# PLUGIN
+plugin
+plugins
+plug-in
+addon
+addons
+add-on
+extension
+extensions
+
+# THEME
+theme
+themes
+skin
+skins
+template
+templates
+layout
+layouts
+
+# STYLE
+style
+styles
+stylesheet
+stylesheets
+css
+less
+sass
+scss
+
+# SCRIPT
+script
+scripts
+javascript
+js
+typescript
+ts
+coffeescript
+coffee
+
+# IMAGE
+image
+images
+img
+picture
+pictures
+pic
+photo
+photos
+
+# VIDEO
+video
+videos
+movie
+movies
+film
+films
+media-video
+
+# AUDIO
+audio
+audios
+sound
+sounds
+music
+musics
+media-audio
+
+# DOCUMENT
+document
+documents
+doc
+docs
+file
+files
+attachment
+attachments
+
+# ARCHIVE
+archive
+archives
+compressed
+zip
+rar
+7z
+tar
+gz
+
+# FONT
+font
+fonts
+webfont
+webfonts
+icon
+icons
+glyph
+glyphs
+
+# COLOR
+color
+colors
+colour
+colours
+palette
+palettes
+theme-color
+
+# ICON
+icon
+icons
+favicon
+favicons
+apple-touch-icon
+touch-icon
+
+# LOGO
+logo
+logos
+brand
+brands
+branding
+identity
+
+# BACKGROUND
+background
+backgrounds
+bg
+backdrop
+backdrops
+wallpaper
+wallpapers
+
+# BORDER
+border
+borders
+outline
+outlines
+frame
+frames
+
+# SHADOW
+shadow
+shadows
+glow
+glows
+reflection
+reflections
+
+# GRADIENT
+gradient
+gradients
+gradient-background
+gradient-fill
+
+# ANIMATION
+animation
+animations
+animate
+animated
+keyframe
+keyframes
+
+# TRANSITION
+transition
+transitions
+transform
+transforms
+translate
+translates
+
+# ROTATE
+rotate
+rotation
+rotates
+spin
+spins
+twirl
+twirls
+
+# SCALE
+scale
+scaling
+zoom
+zooms
+magnify
+magnifies
+
+# SKEW
+skew
+skews
+distort
+distorts
+warp
+warps
+
+# FILTER
+filter
+filters
+blur
+blurs
+sharpen
+sharpens
+
+# EFFECT
+effect
+effects
+fx
+special-effect
+special-effects
+
+# OVERLAY
+overlay
+overlays
+mask
+masks
+blend
+blends
+
+# OPACITY
+opacity
+transparent
+transparency
+alpha
+opaque
+
+# VISIBILITY
+visibility
+visible
+hidden
+show
+hide
+display
+none
+block
+
+# POSITION
+position
+positions
+absolute
+relative
+fixed
+static
+sticky
+
+# ALIGN
+align
+alignment
+aligns
+center
+centered
+middle
+justify
+
+# FLOAT
+float
+floats
+floating
+clear
+clears
+clearfix
+
+# MARGIN
+margin
+margins
+padding
+paddings
+spacing
+spacings
+
+# BORDER
+border
+borders
+outline
+outlines
+stroke
+strokes
+
+# RADIUS
+radius
+radii
+corner
+corners
+rounded
+round
+
+# SHADOW
+shadow
+shadows
+box-shadow
+text-shadow
+drop-shadow
+
+# GRADIENT
+gradient
+gradients
+linear-gradient
+radial-gradient
+conic-gradient
+
+# BACKGROUND
+background
+backgrounds
+bg-image
+background-image
+background-color
+
+# FONT
+font
+fonts
+font-family
+font-size
+font-weight
+font-style
+
+# TEXT
+text
+texts
+text-color
+text-align
+text-decoration
+
+# LIST
+list
+lists
+list-style
+list-item
+list-items
+
+# TABLE
+table
+tables
+table-cell
+table-row
+table-header
+
+# FORM
+form
+forms
+form-field
+form-input
+form-submit
+
+# INPUT
+input
+inputs
+input-text
+input-password
+input-email
+
+# BUTTON
+button
+buttons
+btn
+button-primary
+button-secondary
+
+# LINK
+link
+links
+hyperlink
+hyperlinks
+anchor
+anchors
+
+# NAVIGATION
+navigation
+nav
+navigations
+navbar
+navbars
+menu
+menus
+
+# BREADCRUMB
+breadcrumb
+breadcrumbs
+breadcrumb-nav
+breadcrumb-trail
+
+# PAGINATION
+pagination
+paginations
+pager
+pagers
+page-nav
+page-navigation
+
+# SIDEBAR
+sidebar
+sidebars
+side-nav
+side-navigation
+panel
+panels
+
+# HEADER
+header
+headers
+page-header
+site-header
+main-header
+
+# FOOTER
+footer
+footers
+page-footer
+site-footer
+main-footer
+
+# CONTENT
+content
+contents
+main-content
+page-content
+article-content
+
+# SECTION
+section
+sections
+subsection
+subsections
+region
+regions
+
+# CONTAINER
+container
+containers
+wrapper
+wrappers
+box
+boxes
+
+# GRID
+grid
+grids
+grid-system
+grid-layout
+grid-container
+
+# FLEX
+flex
+flexbox
+flex-container
+flex-item
+flex-layout
+
+# COLUMN
+column
+columns
+col
+cols
+column-layout
+multi-column
+
+# ROW
+row
+rows
+row-layout
+table-row
+grid-row
+
+# LAYOUT
+layout
+layouts
+page-layout
+site-layout
+template-layout
+
+# RESPONSIVE
+responsive
+responsive-design
+mobile-friendly
+mobile-first
+responsive-layout
+
+# MOBILE
+mobile
+mobiles
+phone
+phones
+smartphone
+smartphones
+
+# TABLET
+tablet
+tablets
+ipad
+ipads
+surface
+surfaces
+
+# DESKTOP
+desktop
+desktops
+pc
+pcs
+computer
+computers
+
+# SCREEN
+screen
+screens
+display
+displays
+viewport
+viewports
+
+# PRINT
+print
+printing
+print-style
+print-media
+print-version
+
+# VOICE
+voice
+voices
+speech
+speeches
+voice-assistant
+voice-command
+
+# TOUCH
+touch
+touches
+touchscreen
+touch-screens
+gesture
+gestures
+
+# POINTER
+pointer
+pointers
+cursor
+cursors
+mouse
+mice
+
+# FOCUS
+focus
+focuses
+focused
+focus-state
+focus-style
+
+# HOVER
+hover
+hovers
+hover-state
+hover-style
+mouseover
+mouseovers
+
+# ACTIVE
+active
+activates
+active-state
+active-style
+pressed
+pressed-state
+
+# VISITED
+visited
+visits
+visited-state
+visited-style
+history
+histories
+
+# SELECTION
+selection
+selections
+select
+selects
+selected
+selected-state
+
+# DRAG
+drag
+drags
+dragging
+drag-drop
+drag-and-drop
+
+# DROP
+drop
+drops
+dropzone
+drop-zones
+drop-target
+drop-area
+
+# UPLOAD
+upload
+uploads
+uploader
+uploaders
+file-upload
+image-upload
+
+# DOWNLOAD
+download
+downloads
+downloader
+downloaders
+file-download
+download-link
+
+# STREAM
+stream
+streams
+streaming
+streamer
+streamers
+live-stream
+
+# BROADCAST
+broadcast
+broadcasts
+broadcaster
+broadcasters
+live-broadcast
+video-broadcast
+
+# RECORD
+record
+records
+recorder
+recorders
+audio-record
+video-record
+
+# PLAY
+play
+plays
+player
+players
+media-player
+video-player
+
+# PAUSE
+pause
+pauses
+paused
+pause-button
+pause-control
+
+# STOP
+stop
+stops
+stopped
+stop-button
+stop-control
+
+# SEEK
+seek
+seeks
+seeker
+seekers
+seek-bar
+progress-bar
+
+# VOLUME
+volume
+volumes
+volume-control
+volume-slider
+volume-button
+
+# MUTE
+mute
+mutes
+muted
+mute-button
+mute-control
+
+# FULLSCREEN
+fullscreen
+full-screen
+fullscreen-mode
+fullscreen-button
+
+# PICTURE-IN-PICTURE
+picture-in-picture
+pip
+pip-mode
+pip-button
+
+# CAPTION
+caption
+captions
+subtitle
+subtitles
+closed-caption
+cc
+
+# TRANSCRIPT
+transcript
+transcripts
+transcription
+transcriptions
+speech-to-text
+
+# AUDIO DESCRIPTION
+audio-description
+ad
+audio-desc
+description-track
+
+# QUALITY
+quality
+qualities
+video-quality
+audio-quality
+quality-setting
+
+# RESOLUTION
+resolution
+resolutions
+video-resolution
+screen-resolution
+resolution-setting
+
+# BITRATE
+bitrate
+bitrates
+video-bitrate
+audio-bitrate
+bitrate-setting
+
+# CODEC
+codec
+codecs
+video-codec
+audio-codec
+codec-info
+
+# FORMAT
+format
+formats
+video-format
+audio-format
+file-format
+
+# CONTAINER
+container
+containers
+video-container
+audio-container
+media-container
+
+# TRACK
+track
+tracks
+video-track
+audio-track
+subtitle-track
+
+# CHAPTER
+chapter
+chapters
+media-chapter
+chapter-mark
+chapter-point
+
+# PLAYLIST
+playlist
+playlists
+media-playlist
+playlist-item
+playlist-manager
+
+# QUEUE
+queue
+queues
+play-queue
+queue-manager
+queue-item
+
+# HISTORY
+history
+histories
+play-history
+watch-history
+history-list
+
+# FAVORITE
+favorite
+favorites
+favourite
+favourites
+bookmark
+bookmarks
+
+# WATCHLATER
+watchlater
+watch-later
+watch-later-list
+save-for-later
+
+# RECOMMENDATION
+recommendation
+recommendations
+suggested
+suggestions
+you-may-like
+
+# TRENDING
+trending
+trends
+popular
+popular-now
+hot
+viral
+
+# NEW
+new
+news
+latest
+recent
+recently-added
+
+# FEATURED
+featured
+features
+highlighted
+highlights
+spotlight
+
+# CATEGORY
+category
+categories
+category-list
+category-page
+category-view
+
+# TAG
+tag
+tags
+tagged
+tag-cloud
+tag-list
+
+# COLLECTION
+collection
+collections
+collect
+collects
+collection-page
+
+# CURATED
+curated
+curation
+curator
+curators
+hand-picked
+
+# AUTOPLAY
+autoplay
+auto-play
+autoplay-setting
+autoplay-control
+
+# LOOP
+loop
+loops
+looping
+loop-playback
+repeat
+repeats
+
+# SHUFFLE
+shuffle
+shuffles
+shuffle-play
+random
+randomize
+
+# SPEED
+speed
+speeds
+playback-speed
+speed-control
+fast-forward
+
+# SKIP
+skip
+skips
+skip-forward
+skip-backward
+skip-intro
+
+# REWIND
+rewind
+rewinds
+rewind-button
+rewind-control
+backward
+
+# FORWARD
+forward
+forwards
+forward-button
+forward-control
+fast-forward
+
+# PREVIOUS
+previous
+prev
+previous-button
+previous-track
+back
+
+# NEXT
+next
+next-button
+next-track
+forward-track
+
+# FIRST
+first
+first-button
+first-track
+start-over
+
+# LAST
+last
+last-button
+last-track
+end-track
+
+# RANDOM
+random
+randomize
+random-button
+random-track
+shuffle
+
+# SEQUENTIAL
+sequential
+sequence
+sequential-play
+in-order
+orderly
+
+# ALPHABETICAL
+alphabetical
+alphabetical-order
+a-to-z
+az
+za
+
+# CHRONOLOGICAL
+chronological
+chronological-order
+time-order
+date-order
+
+# REVERSE
+reverse
+reversed
+reverse-order
+backwards
+descending
+
+# ASCENDING
+ascending
+ascend
+ascending-order
+forwards
+asc
+
+# DESCENDING
+descending
+descend
+descending-order
+backwards
+desc
+
+# GROUPED
+grouped
+group
+groups
+group-by
+grouping
+
+# FILTERED
+filtered
+filter
+filters
+filter-by
+filtering
+
+# SORTED
+sorted
+sort
+sorts
+sort-by
+sorting
+
+# SEARCHED
+searched
+search
+searches
+search-result
+search-results
+
+# PAGINATED
+paginated
+paginate
+paginates
+pagination
+paged
+
+# INFINITE
+infinite
+infinity
+infinite-scroll
+endless
+load-more
+
+# LAZY
+lazy
+lazyload
+lazy-load
+lazy-image
+lazy-content
+
+# VIRTUAL
+virtual
+virtualized
+virtual-scroll
+virtual-list
+virtual-grid
+
+# RESPONSIVE
+responsive
+responsively
+responsive-image
+responsive-video
+responsive-embed
+
+# ADAPTIVE
+adaptive
+adaptively
+adaptive-image
+adaptive-streaming
+adaptive-bitrate
+
+# PROGRESSIVE
+progressive
+progressively
+progressive-image
+progressive-enhancement
+
+# GRACEFUL
+graceful
+gracefully
+graceful-degradation
+fallback
+fallbacks
+
+# POLYFILL
+polyfill
+polyfills
+polyfill-library
+polyfill-service
+
+# SHIM
+shim
+shims
+shim-library
+shim-layer
+
+# PONYFILL
+ponyfill
+ponyfills
+ponyfill-pattern
+ponyfill-approach
+
+# TRANSIPLER
+transpiler
+transpilers
+transpile
+transpiles
+transpilation
+
+# COMPILER
+compiler
+compilers
+compile
+compiles
+compilation
+
+# BUNDLER
+bundler
+bundlers
+bundle
+bundles
+bundling
+
+# MINIFIER
+minifier
+minifiers
+minify
+minifies
+minification
+
+# COMPRESSOR
+compressor
+compressors
+compress
+compresses
+compression
+
+# OPTIMIZER
+optimizer
+optimizers
+optimize
+optimizes
+optimization
+
+# VALIDATOR
+validator
+validators
+validate
+validates
+validation
+
+# SANITIZER
+sanitizer
+sanitizers
+sanitize
+sanitizes
+sanitization
+
+# ESCAPER
+escaper
+escapers
+escape
+escapes
+escaping
+
+# ENCODER
+encoder
+encoders
+encode
+encodes
+encoding
+
+# DECODER
+decoder
+decoders
+decode
+decodes
+decoding
+
+# PARSER
+parser
+parsers
+parse
+parses
+parsing
+
+# SERIALIZER
+serializer
+serializers
+serialize
+serializes
+serialization
+
+# DESERIALIZER
+deserializer
+deserializers
+deserialize
+deserializes
+deserialization
+
+# NORMALIZER
+normalizer
+normalizers
+normalize
+normalizes
+normalization
+
+# DENORMALIZER
+denormalizer
+denormalizers
+denormalize
+denormalizes
+denormalization
+
+# TRANSFORMER
+transformer
+transformers
+transform
+transforms
+transformation
+
+# MAPPER
+mapper
+mappers
+map
+maps
+mapping
+
+# REDUCER
+reducer
+reducers
+reduce
+reduces
+reduction
+
+# FILTERER
+filterer
+filterers
+filter
+filters
+filtering
+
+# SORTER
+sorter
+sorters
+sort
+sorts
+sorting
+
+# GROUPER
+grouper
+groupers
+group
+groups
+grouping
+
+# AGGREGATOR
+aggregator
+aggregators
+aggregate
+aggregates
+aggregation
+
+# ACCUMULATOR
+accumulator
+accumulators
+accumulate
+accumulates
+accumulation
+
+# COMBINER
+combiner
+combiners
+combine
+combines
+combination
+
+# MERGER
+merger
+mergers
+merge
+merges
+merging
+
+# SPLITTER
+splitter
+splitters
+split
+splits
+splitting
+
+# JOINER
+joiner
+joiners
+join
+joins
+joining
+
+# SEPARATOR
+separator
+separators
+separate
+separates
+separation
+
+# DIVIDER
+divider
+dividers
+divide
+divides
+division
+
+# PARTITIONER
+partitioner
+partitioners
+
+/admin
+/administrator
+/dashboard
+/panel
+/controlpanel
+/cp
+/backend
+/manager
+/login
+/signin
+/auth
+/account
+/user
+/users
+/my-account
+/wp-admin
+/joomla/administrator
+/drupal/admin
+/magento/admin
+/prestashop/admin
+/opencart/admin
+/ghost
+/strapi/admin
+/directus/admin
