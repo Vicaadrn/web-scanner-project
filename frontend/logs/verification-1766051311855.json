@@ -1,0 +1,6 @@
+{
+  "email": "oke123@gmail.com",
+  "verificationUrl": "http://localhost:3000/api/auth/verify?token=e78a6a56c609158df508d05fc897176be6672d7d1e03cff6e663d715bfa8b713",
+  "timestamp": "2025-12-18T09:48:31.855Z",
+  "token": "e78a6a56c609158df508d05fc897176be6672d7d1e03cff6e663d715bfa8b713"
+}

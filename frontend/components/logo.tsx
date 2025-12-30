@@ -59,7 +59,7 @@ const Logo = () => {
       </svg>
 
       <span className="text-xl font-bold bg-gradient-to-r from-indigo-700 dark:from-indigo-400 to-indigo-400 dark:to-indigo-300 bg-clip-text text-transparent">
-        PScanner
+        PScanner - Beta Version
       </span>
     </motion.div>
   );

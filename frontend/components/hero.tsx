@@ -1,19 +1,197 @@
+'use client';
+
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Gift, Search } from 'lucide-react';
+import { 
+  Search, 
+  Loader2, 
+  ShieldAlert, 
+  Zap, 
+  Telescope, 
+  Brain, 
+  FileText, 
+  Download, 
+  Share2, 
+  Settings, 
+  AlertTriangle, 
+  CheckCircle, 
+  Clock,
+  ChevronRight,
+  Eye
+} from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { useState, useEffect, useMemo, useContext } from 'react';
-import Link from 'next/link';
-import { AnimatedTooltip } from "@/components/ui/animated-tooltip";
-import { Star } from '@/components/custom/star';
-import CustomDropdown from "@/components/custom/dropdown";
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
+
+// --- CUSTOM COMPONENTS ---
+
+const CustomTabs = ({ 
+  children,
+  className = "" 
+}: { 
+  children: React.ReactNode;
+  className?: string;
+}) => {
+  return (
+    <div className={`w-full ${className}`}>
+      {children}
+    </div>
+  );
+};
+
+const CustomTabsList = ({ 
+  children,
+  className = ""
+}: { 
+  children: React.ReactNode;
+  className?: string;
+}) => {
+  return (
+    <div className={`flex border-b border-gray-200 dark:border-zinc-800 mb-6 ${className}`}>
+      {children}
+    </div>
+  );
+};
+
+const CustomTabsTrigger = ({ 
+  value, 
+  children, 
+  isActive,
+  onClick
+}: { 
+  value: string; 
+  children: React.ReactNode;
+  isActive: boolean;
+  onClick: () => void;
+}) => {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-2 px-4 py-3 font-medium text-sm transition-all ${
+        isActive 
+          ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-500' 
+          : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+      }`}
+    >
+      {children}
+    </button>
+  );
+};
+
+const CustomTabsContent = ({ 
+  value, 
+  children, 
+  activeTab 
+}: { 
+  value: string; 
+  children: React.ReactNode;
+  activeTab: string;
+}) => {
+  if (value !== activeTab) return null;
+  return <div className="space-y-6">{children}</div>;
+};
+
+const CustomCard = ({ 
+  children, 
+  className = "" 
+}: { 
+  children: React.ReactNode;
+  className?: string;
+}) => {
+  return (
+    <div className={`border border-gray-200 dark:border-zinc-800 rounded-xl bg-white dark:bg-zinc-900/50 ${className}`}>
+      {children}
+    </div>
+  );
+};
+
+const CustomCardHeader = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <div className="p-6 border-b border-gray-200 dark:border-zinc-800">
+      {children}
+    </div>
+  );
+};
+
+const CustomCardContent = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <div className="p-6">
+      {children}
+    </div>
+  );
+};
+
+const CustomCardFooter = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <div className="p-6 border-t border-gray-200 dark:border-zinc-800">
+      {children}
+    </div>
+  );
+};
+
+const CustomProgress = ({ value }: { value: number }) => {
+  return (
+    <div className="w-full bg-gray-200 dark:bg-zinc-800 rounded-full h-2">
+      <div 
+        className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
+        style={{ width: `${value}%` }}
+      />
+    </div>
+  );
+};
+
+const CustomBadge = ({ 
+  children, 
+  variant = "default",
+  className = ""
+}: { 
+  children: React.ReactNode; 
+  variant?: "default" | "destructive" | "outline" | "secondary";
+  className?: string;
+}) => {
+  const variants = {
+    default: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300",
+    destructive: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+    outline: "border border-gray-300 dark:border-zinc-700 text-gray-700 dark:text-gray-300",
+    secondary: "bg-gray-100 text-gray-800 dark:bg-zinc-800 dark:text-gray-300"
+  };
+  return (
+    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${variants[variant]} ${className}`}>
+      {children}
+    </span>
+  );
+};
+
+type TabType = "overview" | "vulnerabilities" | "discovery";
+
+// --- PARSING LOGIC (DARI KODE PERTAMA) ---
+
+const parseVulnerability = (vuln: any) => {
+  try {
+    const data = typeof vuln === 'string' ? JSON.parse(vuln) : vuln;
+    return {
+      name: data.info?.name || "Vulnerability Detected",
+      description: data.info?.description || "No description available for this finding.",
+      severity: data.info?.severity?.toUpperCase() || "INFO",
+      templateId: data["template-id"] || ""
+    };
+  } catch (e) {
+    if (typeof vuln === 'string') {
+      const parts = vuln.split('-');
+      return {
+        name: parts[0]?.trim() || "Unknown Finding",
+        description: parts.slice(1).join('-').trim() || "No detailed description.",
+        severity: "INFO",
+        templateId: ""
+      };
+    }
+    return { name: "Unknown Finding", description: "Error parsing data", severity: "INFO", templateId: "" };
+  }
+};
 
 const Hero = () => {
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  
-  // 🎯 FIX: Pastikan useAuth mengembalikan nilai, meskipun null
   const authContext = useAuth();
   const { user, checkAuthStatus } = authContext || {};
   
@@ -21,27 +199,68 @@ const Hero = () => {
 
   const [url, setUrl] = useState("");
   const [scanType, setScanType] = useState("Quick Scan");
-  const [aiAnalysis, setAiAnalysis] = useState("Standard Analysis");
-  const [reportFormat, setReportFormat] = useState("Detailed Report");
-
-  // hasil scanning
+  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
+  
+  const [loading, setLoading] = useState(false);
   const [scanResult, setScanResult] = useState<string | null>(null);
   const [matches, setMatches] = useState<any[]>([]);
-  const [showRaw, setShowRaw] = useState(false);
-  const [limit, setLimit] = useState(50);
-
-  // tambahan dari AI backend
-  const [readableSummary, setReadableSummary] = useState<any | null>(null);
-  const [recommendations, setRecommendations] = useState<string[] | null>(null);
-
-  // State untuk forced login
-  // 🎯 Mengganti isLoggedIn dengan user dari useAuth. Menggunakan isLoggedIn state hanya sebagai fallback/mirror.
+  const [vulnerabilities, setVulnerabilities] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<TabType>("overview");
+  
+  const [scanProgress, setScanProgress] = useState(0);
+  const [currentPhase, setCurrentPhase] = useState("");
+  const [estimatedTime, setEstimatedTime] = useState("");
+  
   const [requiresLogin, setRequiresLogin] = useState(false);
   const [remainingScans, setRemainingScans] = useState<number | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
   
-  // Menggunakan status user dari AuthContext.
   const isLoggedIn = !!user;
+
+  const [advancedConfig, setAdvancedConfig] = useState({
+    wordlistSize: 'medium' as 'small' | 'medium' | 'large',
+    recursionDepth: 2,
+    rateLimit: 'medium' as 'high' | 'medium' | 'low',
+    excludePatterns: '.git,.env,admin,backup',
+    enableAI: true,
+    customHeaders: ''
+  });
+
+  // --- Scan Configuration based on type ---
+  const scanConfigs = {
+    "Quick Scan": {
+      icon: <Zap className="w-5 h-5" />,
+      color: "bg-green-500",
+      description: "FFUF + Nuclei (Critical/High vulnerabilities only)",
+      duration: "5-10 minutes",
+      tools: ["FFUF", "Nuclei (Critical/High)"],
+      wordlistFile: 'common.txt',  // ✅ UBAH: wordlist -> wordlistFile (string file name)
+      recursion: 1,
+      nucleiTemplates: 'critical,high'
+    },
+    "Deep Scan": {
+      icon: <Telescope className="w-5 h-5" />,
+      color: "bg-amber-500",
+      description: "FFUF + Katana + Selected Nuclei templates",
+      duration: "30-60 minutes",
+      tools: ["FFUF", "Katana", "Nuclei (Selected)"],
+      wordlistFile: 'medium.txt',  // ✅ UBAH: wordlist -> wordlistFile (string file name)
+      recursion: 3,
+      nucleiTemplates: 'critical,high,medium'
+    },
+    "Full Scan": {
+      icon: <Brain className="w-5 h-5" />,
+      color: "bg-indigo-500",
+      description: "All tools + AI Processing & Analysis",
+      duration: "2-4 hours",
+      tools: ["FFUF", "Katana", "Nuclei (All)", "AI Analysis"],
+      wordlistFile: 'big.txt',  // ✅ UBAH: wordlist -> wordlistFile (string file name)
+      recursion: 5,
+      nucleiTemplates: 'all'
+    }
+  };
+
+  const currentConfig = scanConfigs[scanType as keyof typeof scanConfigs] || scanConfigs["Quick Scan"];
 
   const handleScan = async () => {
     if (!url) {
@@ -49,423 +268,478 @@ const Hero = () => {
       return;
     }
 
-    // Reset semua state
-    setScanResult("⏳ Scanning... please wait.");
+    setLoading(true);
+    setScanProgress(0);
+    setCurrentPhase("Initializing scan...");
+    setEstimatedTime(currentConfig.duration);
+    setScanResult(null);
     setMatches([]);
-    setShowRaw(false);
-    setReadableSummary(null);
-    setRecommendations(null);
+    setVulnerabilities([]);
+    setActiveTab("overview");
     setRequiresLogin(false);
     setScanError(null);
 
     try {
+      // ✅ PERBAIKAN: Gunakan wordlistFile dari config
+      const selectedWordlist = currentConfig.wordlistFile;
+      
       const res = await fetch("/api/scans", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
           url: url,
-          wordlist: "common.txt",
-          scan_type: scanType.toLowerCase().includes("deep")
-            ? "deep"
-            : scanType.toLowerCase().includes("full")
-            ? "full"
-            : "quick",
+          wordlist: selectedWordlist,  // ✅ KIRIM wordlist yang benar sesuai scan type
+          scan_type: scanType.toLowerCase().includes("deep") ? "deep" : 
+                     scanType.toLowerCase().includes("full") ? "full" : "quick",
+          config: advancedConfig
         }),
       });
 
-      const data = await res.json();
+      const initialData = await res.json();
 
-      console.log("Scan response:", data); // Debug log
-
-      // 🎯 HANDLE FORCED LOGIN
-      // Cek apakah status 401 dan respons meminta login
-      if (res.status === 401 && (data.requiresLogin || data.error?.includes("login"))) {
-        
-        // Jika user sudah login tapi masih dapat 401, mungkin token expired/masalah server
-        if (isLoggedIn) {
-          setScanError("Your session may have expired. Please refresh or relogin.");
-          setScanResult(null);
-          return;
-        }
-
+      if (res.status === 401) {
         setRequiresLogin(true);
-        setScanResult(`❌ ${data.message || "Please login to continue scanning"}`);
-        
-        if (data.scanInfo?.remainingScans !== undefined) {
-          setRemainingScans(data.scanInfo.remainingScans);
-        }
-        
-        // Trigger login modal hanya jika belum login
-        if (!isLoggedIn) {
-          window.dispatchEvent(new CustomEvent("open-login-modal"));
-        }
+        setLoading(false);
+        window.dispatchEvent(new CustomEvent("open-login-modal"));
         return;
       }
 
-      // 🎯 HANDLE OTHER ERRORS
-      if (data.status === "error" || !res.ok) {
-        setScanResult(`❌ ${data.error || "Scan failed"}`);
-        setScanError(data.error);
-        return;
-      }
+      if (!res.ok) throw new Error(initialData.error || "Failed to start scan");
 
-      // 🎯 PROCESS SUCCESS
-      if (data.status === "ok" && data.data) {
-        const summary = data.data.summary || {};
-        const found = Array.isArray(data.data.matches) ? data.data.matches : [];
-        setMatches(found);
-        setReadableSummary(data.data.readable_summary || null);
-        
-        // 🎯 FIX: Pastikan recommendations adalah array atau null
-        const incomingRecommendations = data.data.recommendations;
-        setRecommendations(
-          Array.isArray(incomingRecommendations)
-            ? incomingRecommendations
-            : null
-        );
-        
-        // Update scan info
-        if (data.scanInfo) {
-          setRemainingScans(data.scanInfo.remainingScans);
-          // setIsLoggedIn(data.scanInfo.isLoggedIn || !!user); // Tidak perlu disetel lagi
+      const scanId = initialData.scan_id;
+      setCurrentPhase("Discovery (FFUF) running...");
+      setScanProgress(25);
+
+      const pollInterval = setInterval(async () => {
+        try {
+          // FIX: Menggunakan endpoint yang benar sesuai kode pertama
+          const statusRes = await fetch(`/api/scans/status?id=${scanId}`);
+          if (!statusRes.ok) {
+            console.error("Failed to fetch status:", statusRes.status);
+            return;
+          }
+
+          const update = await statusRes.json();
+          console.log("Polling update:", update); // Debug logging
+
+          if (update.status === "processing") {
+            if (update.discovery) {
+              setCurrentPhase("Vulnerability Analysis (Nuclei)...");
+              setScanProgress(60);
+            }
+            if (update.vulnerabilities?.length > 0) {
+              setCurrentPhase("AI Processing & Analysis...");
+              setScanProgress(85);
+            }
+          }
+
+          // FIX: Menggunakan struktur data yang benar dari backend
+          if (update.discovery && update.discovery.data) {
+            setMatches(update.discovery.data.matches || []);
+          } else if (update.discovery) {
+            // Backup jika struktur berbeda
+            setMatches(update.discovery.matches || []);
+          }
+
+          if (update.status === "finished") {
+            clearInterval(pollInterval);
+            setLoading(false);
+            setScanProgress(100);
+            setCurrentPhase("Scan completed!");
+            setVulnerabilities(update.vulnerabilities || []);
+            setScanResult(`Scan completed! Found ${update.discovery?.data?.matches?.length || update.discovery?.matches?.length || 0} endpoints and ${update.vulnerabilities?.length || 0} vulnerabilities.`);
+            if (initialData.scanInfo) setRemainingScans(initialData.scanInfo.remainingScans);
+          }
+
+          if (update.status === "error") {
+            clearInterval(pollInterval);
+            setLoading(false);
+            setScanError(update.error || "An error occurred during scan.");
+          }
+        } catch (err) {
+          console.error("Polling error:", err);
         }
-        
-        setScanResult(
-          `✅ Scan complete for ${summary.target || url}\nFound ${found.length} result(s).`
-        );
-      } else {
-        setScanResult(`❌ Unexpected response: ${JSON.stringify(data)}`);
-      }
+      }, 3000);
 
     } catch (error: any) {
-      console.error("Scan error:", error);
-      setScanResult(`❌ Error: ${error.message}`);
       setScanError(error.message);
+      setLoading(false);
     }
   };
 
-  // Check auth status on mount
   useEffect(() => {
-    if (checkAuthStatus) {
-      checkAuthStatus();
-    }
-    // State isLoggedIn kini didapatkan dari !!user
+    if (checkAuthStatus) checkAuthStatus();
   }, [checkAuthStatus]);
 
-  const shownMatches = useMemo(() => matches.slice(0, limit), [matches, limit]);
+  // --- PERBAIKAN LOGIKA STATS (DARI KODE PERTAMA) ---
+  const stats = useMemo(() => {
+    let critical = 0;
+    let high = 0;
+    let medium = 0;
+    let low = 0;
+
+    vulnerabilities.forEach(vuln => {
+      let severity = "";
+      
+      // 1. Cek jika vuln adalah Object (Hasil dari JSON.Unmarshal backend baru)
+      if (typeof vuln === 'object' && vuln !== null) {
+        severity = (vuln.info?.severity || vuln.severity || "").toUpperCase();
+      } 
+      // 2. Cek jika vuln adalah String (Hasil dari versi lama atau fallback)
+      else if (typeof vuln === 'string') {
+        try {
+          const parsed = JSON.parse(vuln);
+          severity = (parsed.info?.severity || "").toUpperCase();
+        } catch (e) {
+          severity = vuln.toUpperCase();
+        }
+      }
+
+      if (severity.includes('CRITICAL')) critical++;
+      else if (severity.includes('HIGH')) high++;
+      else if (severity.includes('MEDIUM')) medium++;
+      else if (severity.includes('LOW') || severity !== "") low++;
+    });
+
+    return {
+      totalEndpoints: matches.length,
+      totalVulnerabilities: vulnerabilities.length,
+      critical, high, medium, low
+    };
+  }, [matches, vulnerabilities]);
+
+  const handleTabChange = (tab: TabType) => setActiveTab(tab);
 
   return (
-    <section className="relative lg:min-h-screen bg-gradient-to-br from-gray-50 dark:from-zinc-950 via-indigo-50 dark:via-black to-indigo-50 dark:to-zinc-950 pt-25 pb-20 lg:pt-40 lg:pb-20 overflow-hidden group">
-      <div className="container mx-auto px-6 relative z-10">
-        <div className="text-center max-w-5xl mx-auto">
-          {/* Title ... */}
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="font-black text-3xl lg:text-7xl mb-4 lg:mb-8"
-          >
-            <span className="bg-gradient-to-r from-indigo-900 via-blue-900 to-indigo-900 dark:from-gray-50 dark:via-blue-300 dark:to-indigo-900 bg-clip-text text-transparent">
-              Security Scanner Dashboard
-            </span>
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="text-base md:text-xl text-muted-foreground mb-8 max-w-[600px] mx-auto leading-relaxed"
-          >
-            Enter a URL to scan for vulnerabilities with AI-powered analysis.
-            {!isLoggedIn && remainingScans !== null && remainingScans >= 0 && (
-              <span className="block mt-2 text-sm font-medium text-amber-600 dark:text-amber-400">
-                Free scans remaining: {remainingScans}
+    <section className="relative min-h-screen bg-gradient-to-br from-gray-50 dark:from-zinc-950 via-indigo-50 dark:via-black to-indigo-50 dark:to-zinc-950 pt-20 pb-20 lg:pt-28 lg:pb-20 overflow-hidden">
+      <div className="container mx-auto px-4 sm:px-6 relative z-10">
+        <div className="max-w-6xl mx-auto">
+          {/* Hero Header */}
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
+            <h1 className="font-black text-3xl sm:text-4xl lg:text-5xl mb-4">
+              <span className="bg-gradient-to-r from-indigo-900 via-blue-900 to-indigo-900 dark:from-gray-50 dark:via-blue-300 dark:to-indigo-900 bg-clip-text text-transparent">
+                Advanced Security Scanner
               </span>
-            )}
-            {isLoggedIn && (
-              <span className="block mt-2 text-sm font-medium text-green-600 dark:text-green-400">
-                ✓ Unlimited scans (Logged in)
-              </span>
-            )}
-          </motion.p>
-
-          {/* 🎯 FORCED LOGIN ALERT */}
-          {/* HANYA TAMPILKAN JIKA requiresLogin=true DAN user BELUM login */}
-          {requiresLogin && !user && ( 
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg dark:bg-red-900/20 dark:border-red-800"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center dark:bg-red-900/30">
-                  <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-red-800 dark:text-red-300">Login Required</h3>
-                  <p className="text-sm text-red-600 dark:text-red-400">
-                    You've used your free scan limit. Please login to continue scanning.
-                  </p>
-                  <div className="flex gap-2 mt-2">
-                    <Button 
-                      size="sm" 
-                      className="bg-red-600 hover:bg-red-700 text-white"
-                      onClick={() => window.dispatchEvent(new CustomEvent("open-login-modal"))}
-                    >
-                      Login Now
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => setRequiresLogin(false)}
-                    >
-                      Dismiss
-                    </Button>
-                  </div>
-                </div>
+            </h1>
+            <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+              Scan your targets for vulnerabilities using industry-standard tools and AI analysis.
+            </p>
+            {!isLoggedIn && remainingScans !== null && (
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-100 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-full mt-4">
+                <span className="text-sm font-medium text-amber-700 dark:text-amber-300">
+                  Free scans remaining: {remainingScans}
+                </span>
               </div>
-            </motion.div>
-          )}
-
-          {/* Form utama */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            className="bg-white/80 dark:bg-zinc-900/70 shadow-lg rounded-2xl p-6 md:p-10 backdrop-blur-md border border-gray-200 dark:border-zinc-800 mb-8"
-          >
-            {/* User Status Indicator */}
-            {user && (
-              <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span className="font-medium">Logged in as: {user.email}</span>
-                  <span className="text-xs bg-green-100 dark:bg-green-800 px-2 py-1 rounded">
-                    Unlimited scans
-                  </span>
-                </div>
-                {/* Hapus notifikasi ini, karena sudah diganti dengan notifikasi di atas */}
-              </div>
-            )}
-
-            {/* URL Input */}
-            <div className="flex flex-col md:flex-row items-center gap-4 mb-6">
-              <input
-                type="text"
-                placeholder="https://example.com"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                className="flex-1 rounded-lg border border-gray-300 dark:border-zinc-700 bg-transparent px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none"
-              />
-              <Button 
-                size="lg" 
-                onClick={handleScan} 
-                className="px-6"
-                disabled={requiresLogin && !isLoggedIn} // Disable jika required login dan user belum login
-              >
-                <Search className="mr-2 h-5 w-5" /> Scan
-              </Button>
-            </div>
-
-            {/* Dropdowns ... */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <CustomDropdown
-                options={["Quick Scan", "Deep Scan", "Full Audit"]}
-                value={scanType}
-                onChange={setScanType}
-              />
-              <CustomDropdown
-                options={[
-                  "Standard Analysis",
-                  "Advanced AI Analysis",
-                  "Exploit Detection",
-                ]}
-                value={aiAnalysis}
-                onChange={setAiAnalysis}
-              />
-              <CustomDropdown
-                options={[
-                  "Detailed Report",
-                  "Summary Report",
-                  "JSON Output",
-                ]}
-                value={reportFormat}
-                onChange={setReportFormat}
-              />
-            </div>
-
-            {/* 🎯 ERROR DISPLAY ... */}
-            {scanError && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
-              >
-                <div className="flex items-center gap-2 text-red-700 dark:text-red-300">
-                  <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span>{scanError}</span>
-                </div>
-              </motion.div>
-            )}
-
-            {/* ✅ Scan Results */}
-            {(scanResult || matches.length > 0) && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.4 }}
-                className="mt-6 p-5 rounded-xl border border-indigo-500/30 bg-gradient-to-r from-indigo-900/10 via-blue-800/10 to-indigo-900/10 
-                dark:from-indigo-900/30 dark:via-blue-900/30 dark:to-indigo-800/30 text-left
-                text-sm md:text-base text-gray-800 dark:text-gray-100 shadow-[0_0_15px_rgba(99,102,241,0.3)]"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <p className="font-semibold text-indigo-600 dark:text-indigo-400">
-                      Scan Results:
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1 whitespace-pre-line">
-                      {scanResult}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      className="text-xs px-2 py-1 border rounded bg-transparent hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"
-                      onClick={() => setShowRaw(!showRaw)}
-                    >
-                      {showRaw ? "Hide raw" : "Show raw"}
-                    </button>
-                    {matches.length > limit && (
-                      <button
-                        className="text-xs px-2 py-1 border rounded bg-transparent hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"
-                        onClick={() => setLimit((l) => l + 50)}
-                      >
-                        Load more
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Ringkasan singkat */}
-                {readableSummary && (
-                  <div className="mb-4 p-3 rounded bg-indigo-50/20 dark:bg-indigo-900/20">
-                    <div className="font-semibold text-indigo-600 dark:text-indigo-400">
-                      Ringkasan Singkat
-                    </div>
-                    <div className="text-sm text-muted-foreground mt-1">
-                      {readableSummary.explanation}
-                    </div>
-
-                    {readableSummary.top_examples && Array.isArray(readableSummary.top_examples) && (
-                      <ul className="mt-3 text-sm list-disc list-inside space-y-1">
-                        {readableSummary.top_examples.map(
-                          (ex: any, i: number) => (
-                            <li key={i} className="text-gray-700 dark:text-gray-300">
-                              <span className="font-mono bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded">
-                                {typeof ex.path === 'object' ? ex.path.FUZZ : ex.path}
-                              </span> — status: {ex.status} — tingkat:{" "}
-                              <strong className={
-                                ex.status >= 400 ? 'text-red-600' : 
-                                ex.status >= 300 ? 'text-yellow-600' : 
-                                'text-green-600'
-                              }>
-                                {ex.status}
-                              </strong>
-                            </li>
-                          )
-                        )}
-                      </ul>
-                    )}
-                  </div>
-                )}
-
-                {/* Saran AI */}
-                {/* 🎯 FIX: Pastikan recommendations adalah array sebelum memanggil .map */}
-                {recommendations && Array.isArray(recommendations) && (
-                  <div className="mb-4 p-3 rounded border border-yellow-300/30 bg-yellow-50/10 dark:bg-yellow-900/10">
-                    <div className="font-semibold text-yellow-700 dark:text-yellow-400">
-                      Saran Singkat
-                    </div>
-                    <ul className="mt-2 text-sm list-disc list-inside space-y-1">
-                      {recommendations.map((r, i) => (
-                        <li key={i} className="text-gray-700 dark:text-gray-300">
-                          {r}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* structured list ... */}
-                {matches.length > 0 && !showRaw && (
-                  <div className="space-y-2 max-h-[420px] overflow-auto pr-2">
-                    <div className="text-xs text-muted-foreground mb-2">
-                      Showing {shownMatches.length} of {matches.length} matches
-                    </div>
-                    {shownMatches.map((m, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-start gap-4 p-2 rounded hover:bg-white/5 dark:hover:bg-white/10 transition-colors"
-                      >
-                        <div className="w-8 text-sm text-indigo-400 font-mono">
-                          {m.status || "-"}
-                        </div>
-                        <div className="flex-1">
-                          <div className="font-mono text-sm text-gray-800 dark:text-gray-200">
-                            {typeof m.path === "object" ? m.path.FUZZ : m.path || "(no path)"}
-                          </div>
-                          <div className="text-xs text-muted-foreground mt-1">
-                            len: {m.length ?? "-"} • words: {m.words ?? "-"} • lines: {m.lines ?? "-"} • dur: {m.duration ? `${(m.duration / 1000000).toFixed(2)}ms` : "-"}
-                          </div>
-                        </div>
-                        <div className="text-xs text-muted-foreground font-mono">
-                          #{idx + 1}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* raw view ... */}
-                {showRaw && (
-                  <pre className="whitespace-pre-wrap leading-relaxed font-mono text-[0.95rem] max-h-[420px] overflow-auto bg-gray-900 text-gray-100 p-3 rounded">
-                    {JSON.stringify(
-                      { summary: scanResult, matches },
-                      null,
-                      2
-                    )}
-                  </pre>
-                )}
-              </motion.div>
             )}
           </motion.div>
 
-          {/* Scan Limit Info */}
-          {!isLoggedIn && remainingScans !== null && (
-            <div className="text-center mt-6">
-              <div className="inline-flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-4 py-2">
-                <svg className="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span className="text-sm text-amber-700 dark:text-amber-300">
-                  Free scans remaining: <strong>{remainingScans}</strong>
-                  {" • "}
-                  <button 
-                    className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
-                    onClick={() => window.dispatchEvent(new CustomEvent("open-login-modal"))}
-                  >
-                    Login for unlimited scans
-                  </button>
-                </span>
+          <CustomCard className="border-2 border-gray-200 dark:border-zinc-800 shadow-2xl bg-white/90 dark:bg-zinc-900/90">
+            <CustomCardHeader>
+              <div className="flex flex-col sm:flex-row justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">Vulnerability Scanner</h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Fast, reliable, and thorough security auditing.</p>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}>
+                  <Settings className="w-4 h-4 mr-2" /> Advanced
+                </Button>
               </div>
+            </CustomCardHeader>
+
+            <CustomCardContent>
+              {/* URL Input */}
+              <div className="mb-8">
+                <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Target URL</label>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      placeholder="https://example.com"
+                      value={url}
+                      onChange={(e) => setUrl(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-gray-900 dark:text-white placeholder:text-gray-400/40 dark:placeholder:text-zinc-500/30 transition-all"
+                      disabled={loading}
+                    />
+                  </div>
+                  <Button size="lg" onClick={handleScan} disabled={loading} className="px-8 gap-2">
+                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
+                    {loading ? "Scanning..." : "Start Scan"}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Mode Selection */}
+              <div className="mb-8">
+                <label className="block text-sm font-medium mb-3 text-gray-700 dark:text-gray-300">Scan Mode</label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {Object.entries(scanConfigs).map(([mode, config]) => (
+                    <div
+                      key={mode}
+                      className={`p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
+                        scanType === mode
+                          ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 shadow-lg'
+                          : 'border-gray-200 dark:border-zinc-800 hover:border-gray-300 dark:hover:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-800/50'
+                      }`}
+                      onClick={() => !loading && setScanType(mode)}
+                    >
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className={`p-2 rounded-lg ${config.color} text-white`}>
+                          {config.icon}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-gray-900 dark:text-white">{mode}</h3>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Clock className="w-3 h-3 text-gray-500" />
+                            <span className="text-xs text-gray-500 dark:text-gray-400">{config.duration}</span>
+                          </div>
+                          {/* ✅ TAMPILKAN WORDSLIST YANG DIGUNAKAN */}
+                          <div className="mt-2">
+                            <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-zinc-800 rounded text-gray-600 dark:text-gray-400">
+                              Wordlist: {config.wordlistFile}
+                            </span>
+                          </div>
+                        </div>
+                        {scanType === mode && (
+                          <CheckCircle className="w-5 h-5 text-indigo-500" />
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{config.description}</p>
+                      <div className="flex flex-wrap gap-2">
+                        {config.tools.map((tool, idx) => (
+                          <span 
+                            key={idx} 
+                            className="px-2 py-1 text-xs border border-gray-300 dark:border-zinc-700 rounded-md text-gray-600 dark:text-gray-400"
+                          >
+                            {tool}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {showAdvancedSettings && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  className="mb-8 p-6 rounded-xl border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-800/30 overflow-hidden"
+                >
+                  <h4 className="font-semibold mb-4 text-gray-900 dark:text-white">Advanced Configuration</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Wordlist Size</label>
+                      <select 
+                        className="w-full rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2"
+                        value={advancedConfig.wordlistSize}
+                        onChange={(e) => setAdvancedConfig({
+                          ...advancedConfig, 
+                          wordlistSize: e.target.value as 'small' | 'medium' | 'large'
+                        })}
+                      >
+                        <option value="small">Small (Quick scans)</option>
+                        <option value="medium">Medium (Deep scans)</option>
+                        <option value="large">Large (Full scans)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Recursion Depth</label>
+                      <select 
+                        className="w-full rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2"
+                        value={advancedConfig.recursionDepth}
+                        onChange={(e) => setAdvancedConfig({
+                          ...advancedConfig, 
+                          recursionDepth: parseInt(e.target.value)
+                        })}
+                      >
+                        <option value="1">Level 1 (Quick)</option>
+                        <option value="2">Level 2 (Standard)</option>
+                        <option value="3">Level 3 (Deep)</option>
+                        <option value="5">Level 5 (Full)</option>
+                      </select>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {scanError && (
+                <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <div className="flex items-center gap-3 text-red-700 dark:text-red-300">
+                    <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium">Scan Error</p>
+                      <p className="text-sm mt-1">{scanError}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {loading && (
+                <div className="mb-8 p-6 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-800/30">
+                  <div className="flex items-center justify-between mb-4">
+                    <div><p className="font-medium">{currentPhase}</p></div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium">{scanProgress}%</p>
+                      <p className="text-xs text-gray-500">{estimatedTime}</p>
+                    </div>
+                  </div>
+                  <CustomProgress value={scanProgress} />
+                </div>
+              )}
+
+              {/* Results Section */}
+              {(scanResult || vulnerabilities.length > 0 || matches.length > 0) && !loading && (
+                <div className="mt-10">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white">Scan Results</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{scanResult}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="gap-2">
+                        <Download className="w-4 h-4" />
+                        Export
+                      </Button>
+                      <Button variant="outline" size="sm" className="gap-2">
+                        <Share2 className="w-4 h-4" />
+                        Share
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+                    <div className="p-4 rounded-lg border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-800/30 text-center">
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalEndpoints}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Endpoints</p>
+                    </div>
+                    <div className="p-4 rounded-lg border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-800/30 text-center">
+                      <p className="text-2xl font-bold text-red-500">{stats.totalVulnerabilities}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Vulnerabilities</p>
+                    </div>
+                    <div className="p-4 rounded-lg border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-800/30 text-center">
+                      <p className="text-2xl font-bold text-amber-500">{stats.critical}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Critical</p>
+                    </div>
+                    <div className="p-4 rounded-lg border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-800/30 text-center">
+                      <p className="text-2xl font-bold text-orange-500">{stats.high}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">High</p>
+                    </div>
+                  </div>
+
+                  <CustomTabs>
+                    <CustomTabsList>
+                      <CustomTabsTrigger value="overview" isActive={activeTab === "overview"} onClick={() => handleTabChange("overview")}>
+                        <FileText className="w-4 h-4" /> Overview
+                      </CustomTabsTrigger>
+                      <CustomTabsTrigger value="vulnerabilities" isActive={activeTab === "vulnerabilities"} onClick={() => handleTabChange("vulnerabilities")}>
+                        <ShieldAlert className="w-4 h-4" /> Vulnerabilities ({vulnerabilities.length})
+                      </CustomTabsTrigger>
+                      <CustomTabsTrigger value="discovery" isActive={activeTab === "discovery"} onClick={() => handleTabChange("discovery")}>
+                        <Telescope className="w-4 h-4" /> Discovery
+                      </CustomTabsTrigger>
+                    </CustomTabsList>
+
+                    <CustomTabsContent value="overview" activeTab={activeTab}>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 dark:text-gray-400">Critical</span>
+                          <span className="font-bold text-red-500">{stats.critical}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 dark:text-gray-400">High</span>
+                          <span className="font-bold text-orange-500">{stats.high}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 dark:text-gray-400">Medium</span>
+                          <span className="font-bold text-yellow-500">{stats.medium}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 dark:text-gray-400">Low</span>
+                          <span className="font-bold text-blue-500">{stats.low}</span>
+                        </div>
+                      </div>
+                    </CustomTabsContent>
+
+                    <CustomTabsContent value="vulnerabilities" activeTab={activeTab}>
+                      <div className="space-y-3">
+                        {vulnerabilities.map((vuln, i) => {
+                          const detail = parseVulnerability(vuln);
+                          return (
+                            <div key={i} className="p-4 rounded-lg border border-gray-200 dark:border-zinc-800 bg-red-500/5">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <h4 className="font-bold text-red-500">{detail.name}</h4>
+                                  <p className="text-sm text-gray-500">{detail.description}</p>
+                                </div>
+                                <CustomBadge variant={detail.severity === 'CRITICAL' ? "destructive" : "outline"}>
+                                  {detail.severity}
+                                </CustomBadge>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </CustomTabsContent>
+
+                    <CustomTabsContent value="discovery" activeTab={activeTab}>
+                      <div className="space-y-2 max-h-[400px] overflow-auto">
+                        {matches.map((m, i) => (
+                          <div key={i} className="flex gap-4 p-3 border border-gray-200 dark:border-zinc-800 rounded-lg">
+                            <span className="font-bold">{m.status}</span>
+                            <span className="font-mono text-sm truncate">{typeof m.path === 'object' ? m.path.FUZZ : m.path}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </CustomTabsContent>
+                  </CustomTabs>
+                </div>
+              )}
+            </CustomCardContent>
+          </CustomCard>
+
+          {/* Feature Highlights */}
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mt-12"
+          >
+            <h3 className="text-2xl font-bold text-center mb-8 text-gray-900 dark:text-white">
+              Why Choose Our Security Scanner?
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              {[
+                {
+                  icon: <Zap className="w-8 h-8" />,
+                  title: "Fast Scanning",
+                  description: "Quick scans complete in minutes with optimized engines"
+                },
+                {
+                  icon: <Brain className="w-8 h-8" />,
+                  title: "AI-Powered Analysis",
+                  description: "Advanced ML algorithms for intelligent vulnerability detection"
+                },
+                {
+                  icon: <FileText className="w-8 h-8" />,
+                  title: "Detailed Reporting",
+                  description: "Comprehensive reports with actionable remediation steps"
+                }
+              ].map((feature, index) => (
+                <motion.div 
+                  key={index}
+                  whileHover={{ y: -10 }}
+                  className="p-6 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-800/30 text-center cursor-pointer hover:shadow-xl hover:border-indigo-500/50 dark:hover:border-indigo-500/50 transition-all duration-300"
+                >
+                  <div className="inline-flex p-3 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 mb-4">
+                    {feature.icon}
+                  </div>
+                  <h4 className="font-bold text-lg mb-2 text-gray-900 dark:text-white">{feature.title}</h4>
+                  <p className="text-gray-600 dark:text-gray-400">{feature.description}</p>
+                </motion.div>
+              ))}
             </div>
-          )}
+          </motion.div>
         </div>
       </div>
     </section>
