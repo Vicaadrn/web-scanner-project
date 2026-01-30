@@ -17,10 +17,14 @@ import {
   CheckCircle, 
   Clock,
   ChevronRight,
-  Eye
+  Eye,
+  Terminal,
+  Server,
+  Cpu,
+  Shield
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 
 // --- CUSTOM COMPONENTS ---
@@ -189,6 +193,13 @@ const parseVulnerability = (vuln: any) => {
   }
 };
 
+// --- FUNGSI FORMAT WAKTU ---
+const formatTime = (seconds: number) => {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}m ${s}s remaining`;
+};
+
 const Hero = () => {
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -209,11 +220,16 @@ const Hero = () => {
   
   const [scanProgress, setScanProgress] = useState(0);
   const [currentPhase, setCurrentPhase] = useState("");
-  const [estimatedTime, setEstimatedTime] = useState("");
+  const [estimatedTime, setEstimatedTime] = useState<number | null>(null); // dalam detik
   
   const [requiresLogin, setRequiresLogin] = useState(false);
   const [remainingScans, setRemainingScans] = useState<number | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
+  
+  // State baru untuk Command Center
+  const [scanLogs, setScanLogs] = useState<string[]>([]);
+  const [activeStage, setActiveStage] = useState<'discovery' | 'vulnscan' | 'analysis'>('discovery');
+  const terminalRef = useRef<HTMLDivElement>(null);
   
   const isLoggedIn = !!user;
 
@@ -232,9 +248,9 @@ const Hero = () => {
       icon: <Zap className="w-5 h-5" />,
       color: "bg-green-500",
       description: "FFUF + Nuclei (Critical/High vulnerabilities only)",
-      duration: "5-10 minutes",
+      duration: "2-3 minutes",
       tools: ["FFUF", "Nuclei (Critical/High)"],
-      wordlistFile: 'common.txt',  // ✅ UBAH: wordlist -> wordlistFile (string file name)
+      wordlistFile: 'common.txt',
       recursion: 1,
       nucleiTemplates: 'critical,high'
     },
@@ -242,9 +258,9 @@ const Hero = () => {
       icon: <Telescope className="w-5 h-5" />,
       color: "bg-amber-500",
       description: "FFUF + Katana + Selected Nuclei templates",
-      duration: "30-60 minutes",
+      duration: "6-8 minutes",
       tools: ["FFUF", "Katana", "Nuclei (Selected)"],
-      wordlistFile: 'medium.txt',  // ✅ UBAH: wordlist -> wordlistFile (string file name)
+      wordlistFile: 'medium.txt',
       recursion: 3,
       nucleiTemplates: 'critical,high,medium'
     },
@@ -252,15 +268,37 @@ const Hero = () => {
       icon: <Brain className="w-5 h-5" />,
       color: "bg-indigo-500",
       description: "All tools + AI Processing & Analysis",
-      duration: "2-4 hours",
+      duration: "14-16 minutes",
       tools: ["FFUF", "Katana", "Nuclei (All)", "AI Analysis"],
-      wordlistFile: 'big.txt',  // ✅ UBAH: wordlist -> wordlistFile (string file name)
+      wordlistFile: 'big.txt',
       recursion: 5,
       nucleiTemplates: 'all'
     }
   };
 
   const currentConfig = scanConfigs[scanType as keyof typeof scanConfigs] || scanConfigs["Quick Scan"];
+
+  // --- Efek Countdown ---
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (loading && estimatedTime && estimatedTime > 0) {
+      timer = setInterval(() => {
+        setEstimatedTime(prev => (prev && prev > 0 ? prev - 1 : 0));
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [loading, estimatedTime]);
+
+  // --- Auto-scroll terminal ---
+  useEffect(() => {
+    if (terminalRef.current) {
+      terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
+    }
+  }, [scanLogs]);
+
+  const addLog = (message: string) => {
+    setScanLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${message}`]);
+  };
 
   const handleScan = async () => {
     if (!url) {
@@ -270,18 +308,34 @@ const Hero = () => {
 
     setLoading(true);
     setScanProgress(0);
-    setCurrentPhase("Initializing scan...");
-    setEstimatedTime(currentConfig.duration);
+    setCurrentPhase("Connecting to server...");
+    
+    // Set estimasi waktu berdasarkan scan type
+    const durations: Record<string, number> = {
+      'quick': 120,   // 2 menit
+      'deep': 420,    // 7 menit
+      'full': 900     // 15 menit
+    };
+    const scanTypeKey = scanType.toLowerCase().includes("deep") ? 'deep' : 
+                       scanType.toLowerCase().includes("full") ? 'full' : 'quick';
+    setEstimatedTime(durations[scanTypeKey] || 300);
+    
     setScanResult(null);
     setMatches([]);
     setVulnerabilities([]);
     setActiveTab("overview");
     setRequiresLogin(false);
     setScanError(null);
+    setScanLogs([]);
+    setActiveStage('discovery');
 
     try {
-      // ✅ PERBAIKAN: Gunakan wordlistFile dari config
       const selectedWordlist = currentConfig.wordlistFile;
+      
+      // Tambah log awal
+      addLog(`🚀 Starting ${scanType} on ${url}`);
+      addLog(`📁 Using wordlist: ${selectedWordlist}`);
+      addLog(`🔧 Config: ${scanTypeKey.toUpperCase()} mode`);
       
       const res = await fetch("/api/scans", {
         method: "POST",
@@ -289,9 +343,8 @@ const Hero = () => {
         credentials: "include",
         body: JSON.stringify({
           url: url,
-          wordlist: selectedWordlist,  // ✅ KIRIM wordlist yang benar sesuai scan type
-          scan_type: scanType.toLowerCase().includes("deep") ? "deep" : 
-                     scanType.toLowerCase().includes("full") ? "full" : "quick",
+          wordlist: selectedWordlist,
+          scan_type: scanTypeKey,
           config: advancedConfig
         }),
       });
@@ -299,6 +352,7 @@ const Hero = () => {
       const initialData = await res.json();
 
       if (res.status === 401) {
+        addLog("❌ Authentication required");
         setRequiresLogin(true);
         setLoading(false);
         window.dispatchEvent(new CustomEvent("open-login-modal"));
@@ -308,61 +362,67 @@ const Hero = () => {
       if (!res.ok) throw new Error(initialData.error || "Failed to start scan");
 
       const scanId = initialData.scan_id;
-      setCurrentPhase("Discovery (FFUF) running...");
-      setScanProgress(25);
+      addLog(`✅ Scan ID: ${scanId}`);
+      addLog("🔄 Establishing WebSocket connection...");
 
-      const pollInterval = setInterval(async () => {
-        try {
-          // FIX: Menggunakan endpoint yang benar sesuai kode pertama
-          const statusRes = await fetch(`/api/scans/status?id=${scanId}`);
-          if (!statusRes.ok) {
-            console.error("Failed to fetch status:", statusRes.status);
-            return;
-          }
+      // --- IMPLEMENTASI WEBSOCKET REAL-TIME ---
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.hostname}:8080/ws?id=${scanId}`;
+      const socket = new WebSocket(wsUrl);
 
-          const update = await statusRes.json();
-          console.log("Polling update:", update); // Debug logging
+      socket.onopen = () => {
+        addLog("🔗 WebSocket Connected");
+        addLog("📡 Listening for real-time updates...");
+      };
 
-          if (update.status === "processing") {
-            if (update.discovery) {
-              setCurrentPhase("Vulnerability Analysis (Nuclei)...");
-              setScanProgress(60);
-            }
-            if (update.vulnerabilities?.length > 0) {
-              setCurrentPhase("AI Processing & Analysis...");
-              setScanProgress(85);
-            }
-          }
-
-          // FIX: Menggunakan struktur data yang benar dari backend
-          if (update.discovery && update.discovery.data) {
-            setMatches(update.discovery.data.matches || []);
-          } else if (update.discovery) {
-            // Backup jika struktur berbeda
-            setMatches(update.discovery.matches || []);
-          }
-
-          if (update.status === "finished") {
-            clearInterval(pollInterval);
-            setLoading(false);
-            setScanProgress(100);
-            setCurrentPhase("Scan completed!");
-            setVulnerabilities(update.vulnerabilities || []);
-            setScanResult(`Scan completed! Found ${update.discovery?.data?.matches?.length || update.discovery?.matches?.length || 0} endpoints and ${update.vulnerabilities?.length || 0} vulnerabilities.`);
-            if (initialData.scanInfo) setRemainingScans(initialData.scanInfo.remainingScans);
-          }
-
-          if (update.status === "error") {
-            clearInterval(pollInterval);
-            setLoading(false);
-            setScanError(update.error || "An error occurred during scan.");
-          }
-        } catch (err) {
-          console.error("Polling error:", err);
+      socket.onmessage = (event) => {
+        const msg = JSON.parse(event.data);
+        
+        if (msg.type === "state") {
+          setScanProgress(msg.data.progress || 0);
+          setCurrentPhase(msg.data.phase || "");
+          return;
         }
-      }, 3000);
+
+        // =====================
+        // EVENT (REALTIME DATA)
+        // =====================
+        if (msg.type === "event") {
+          const data = msg.data;
+
+          // DISCOVERY (FFUF / Katana)
+          if (data.event === "discovery") {
+            setMatches(prev => [
+              ...prev,
+              {
+                path: data.url,
+                status: data.tool
+              }
+            ]);
+
+            addLog(`🔍 [${data.tool}] ${data.url}`);
+          }
+
+          // VULNERABILITY (Nuclei)
+          if (data.event === "vulnerability") {
+            setVulnerabilities(prev => [...prev, data]);
+            addLog(`⚠️ [${data.severity}] ${data.name}`);
+          }
+        }
+      };
+      socket.onerror = (error) => {
+        addLog("❌ WebSocket connection error");
+        console.error("WebSocket Error:", error);
+        setScanError("Connection lost. Please check your network.");
+        setLoading(false);
+      };
+
+      socket.onclose = () => {
+        addLog("🔌 WebSocket disconnected");
+      };
 
     } catch (error: any) {
+      addLog(`❌ Error: ${error.message}`);
       setScanError(error.message);
       setLoading(false);
     }
@@ -372,7 +432,7 @@ const Hero = () => {
     if (checkAuthStatus) checkAuthStatus();
   }, [checkAuthStatus]);
 
-  // --- PERBAIKAN LOGIKA STATS (DARI KODE PERTAMA) ---
+  // --- PERBAIKAN LOGIKA STATS ---
   const stats = useMemo(() => {
     let critical = 0;
     let high = 0;
@@ -382,12 +442,9 @@ const Hero = () => {
     vulnerabilities.forEach(vuln => {
       let severity = "";
       
-      // 1. Cek jika vuln adalah Object (Hasil dari JSON.Unmarshal backend baru)
       if (typeof vuln === 'object' && vuln !== null) {
         severity = (vuln.info?.severity || vuln.severity || "").toUpperCase();
-      } 
-      // 2. Cek jika vuln adalah String (Hasil dari versi lama atau fallback)
-      else if (typeof vuln === 'string') {
+      } else if (typeof vuln === 'string') {
         try {
           const parsed = JSON.parse(vuln);
           severity = (parsed.info?.severity || "").toUpperCase();
@@ -493,7 +550,6 @@ const Hero = () => {
                             <Clock className="w-3 h-3 text-gray-500" />
                             <span className="text-xs text-gray-500 dark:text-gray-400">{config.duration}</span>
                           </div>
-                          {/* ✅ TAMPILKAN WORDSLIST YANG DIGUNAKAN */}
                           <div className="mt-2">
                             <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-zinc-800 rounded text-gray-600 dark:text-gray-400">
                               Wordlist: {config.wordlistFile}
@@ -575,16 +631,183 @@ const Hero = () => {
                 </div>
               )}
 
+              {/* New Command Center UI */}
               {loading && (
-                <div className="mb-8 p-6 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-800/30">
-                  <div className="flex items-center justify-between mb-4">
-                    <div><p className="font-medium">{currentPhase}</p></div>
+                <div className="mb-8 space-y-6">
+                  {/* Header Status & Timer */}
+                  <div className="p-6 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="relative">
+                        <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+                        <div className="absolute inset-0 blur-sm bg-indigo-500/30 animate-pulse rounded-full"></div>
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg text-white">{currentPhase}</h3>
+                        <p className="text-gray-400 text-sm">Target: {url}</p>
+                      </div>
+                    </div>
                     <div className="text-right">
-                      <p className="text-sm font-medium">{scanProgress}%</p>
-                      <p className="text-xs text-gray-500">{estimatedTime}</p>
+                      <div className="flex items-center gap-2 text-indigo-400 font-mono text-xl">
+                        <Clock className="w-5 h-5" />
+                        {estimatedTime ? formatTime(estimatedTime) : "Calculating..."}
+                      </div>
+                      <p className="text-xs text-gray-500 uppercase tracking-widest">Estimated Completion</p>
                     </div>
                   </div>
-                  <CustomProgress value={scanProgress} />
+
+                  {/* Multi-Stage Scanner Stepper */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className={`flex flex-col items-center p-4 rounded-xl transition-all duration-300 ${
+                      activeStage === 'discovery' 
+                        ? 'bg-blue-500/20 border-2 border-blue-500/50' 
+                        : 'bg-gray-100/10 dark:bg-zinc-800/30 border border-gray-200/20 dark:border-zinc-700/30'
+                    }`}>
+                      <div className={`p-3 rounded-full mb-3 transition-all ${
+                        activeStage === 'discovery' 
+                          ? 'bg-blue-500 animate-pulse' 
+                          : 'bg-gray-300 dark:bg-zinc-700'
+                      }`}>
+                        <Server className={`w-6 h-6 ${
+                          activeStage === 'discovery' ? 'text-white' : 'text-gray-500 dark:text-gray-400'
+                        }`} />
+                      </div>
+                      <h4 className="font-bold text-sm mb-1">Discovery</h4>
+                      <p className="text-xs text-gray-500 text-center">FFUF & Katana</p>
+                      <div className="mt-2 text-xs">
+                        {activeStage === 'discovery' ? (
+                          <span className="text-blue-400 animate-pulse">● Running</span>
+                        ) : activeStage === 'vulnscan' || activeStage === 'analysis' ? (
+                          <span className="text-green-400">✓ Completed</span>
+                        ) : (
+                          <span className="text-gray-400">● Pending</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className={`flex flex-col items-center p-4 rounded-xl transition-all duration-300 ${
+                      activeStage === 'vulnscan' 
+                        ? 'bg-amber-500/20 border-2 border-amber-500/50' 
+                        : 'bg-gray-100/10 dark:bg-zinc-800/30 border border-gray-200/20 dark:border-zinc-700/30'
+                    }`}>
+                      <div className={`p-3 rounded-full mb-3 transition-all ${
+                        activeStage === 'vulnscan' 
+                          ? 'bg-amber-500 animate-pulse' 
+                          : activeStage === 'discovery'
+                          ? 'bg-gray-300 dark:bg-zinc-700'
+                          : 'bg-amber-500/30'
+                      }`}>
+                        <ShieldAlert className={`w-6 h-6 ${
+                          activeStage === 'vulnscan' 
+                            ? 'text-white' 
+                            : activeStage === 'discovery'
+                            ? 'text-gray-500 dark:text-gray-400'
+                            : 'text-amber-400'
+                        }`} />
+                      </div>
+                      <h4 className="font-bold text-sm mb-1">Vuln Scan</h4>
+                      <p className="text-xs text-gray-500 text-center">Nuclei</p>
+                      <div className="mt-2 text-xs">
+                        {activeStage === 'vulnscan' ? (
+                          <span className="text-amber-400 animate-pulse">● Running</span>
+                        ) : activeStage === 'analysis' ? (
+                          <span className="text-green-400">✓ Completed</span>
+                        ) : (
+                          <span className="text-gray-400">● Pending</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className={`flex flex-col items-center p-4 rounded-xl transition-all duration-300 ${
+                      activeStage === 'analysis' 
+                        ? 'bg-purple-500/20 border-2 border-purple-500/50' 
+                        : 'bg-gray-100/10 dark:bg-zinc-800/30 border border-gray-200/20 dark:border-zinc-700/30'
+                    }`}>
+                      <div className={`p-3 rounded-full mb-3 transition-all ${
+                        activeStage === 'analysis' 
+                          ? 'bg-purple-500 animate-pulse' 
+                          : activeStage === 'discovery' || activeStage === 'vulnscan'
+                          ? 'bg-gray-300 dark:bg-zinc-700'
+                          : 'bg-purple-500/30'
+                      }`}>
+                        <Brain className={`w-6 h-6 ${
+                          activeStage === 'analysis' 
+                            ? 'text-white' 
+                            : activeStage === 'discovery' || activeStage === 'vulnscan'
+                            ? 'text-gray-500 dark:text-gray-400'
+                            : 'text-purple-400'
+                        }`} />
+                      </div>
+                      <h4 className="font-bold text-sm mb-1">AI Analysis</h4>
+                      <p className="text-xs text-gray-500 text-center">ML Processing</p>
+                      <div className="mt-2 text-xs">
+                        {activeStage === 'analysis' ? (
+                          <span className="text-purple-400 animate-pulse">● Running</span>
+                        ) : activeStage === 'discovery' || activeStage === 'vulnscan' ? (
+                          <span className="text-gray-400">● Pending</span>
+                        ) : (
+                          <span className="text-green-400">✓ Completed</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Live Activity Terminal */}
+                  <div className="border border-gray-800 dark:border-zinc-700 rounded-xl overflow-hidden bg-black/80">
+                    <div className="flex items-center justify-between px-4 py-3 bg-gray-900/90 border-b border-gray-800">
+                      <div className="flex items-center gap-2">
+                        <Terminal className="w-4 h-4 text-green-400" />
+                        <span className="font-mono text-sm font-bold text-green-400">SECURITY SCANNER TERMINAL</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                        <span className="text-xs text-gray-400">LIVE</span>
+                      </div>
+                    </div>
+                    <div 
+                      ref={terminalRef}
+                      className="p-4 h-64 overflow-y-auto font-mono text-sm text-gray-300"
+                    >
+                      {scanLogs.length === 0 ? (
+                        <div className="text-gray-500 italic">
+                          $ Waiting for scan to start...<br/>
+                          $ Initializing security modules...<br/>
+                          $ Preparing WebSocket connection...
+                        </div>
+                      ) : (
+                        scanLogs.map((log, index) => (
+                          <div key={index} className="mb-1">
+                            <span className="text-green-400">$ </span>
+                            <span className={log.includes('✅') || log.includes('✓') ? 'text-green-300' : 
+                                           log.includes('❌') || log.includes('⚠️') ? 'text-red-300' : 
+                                           log.includes('🔍') ? 'text-blue-300' :
+                                           'text-gray-300'}>
+                              {log}
+                            </span>
+                          </div>
+                        ))
+                      )}
+                      {scanLogs.length > 0 && (
+                        <div className="text-green-400 animate-pulse">
+                          $ _<span className="opacity-50">|</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="px-4 py-2 bg-gray-900/90 border-t border-gray-800 text-xs text-gray-500">
+                      {scanLogs.length} log entries • Real-time WebSocket connection • Press Ctrl+C to abort
+                    </div>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="p-6 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-800/30">
+                    <div className="flex items-center justify-between mb-4">
+                      <div><p className="font-medium">{currentPhase}</p></div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium">{scanProgress}%</p>
+                        <p className="text-xs text-gray-500">Progress</p>
+                      </div>
+                    </div>
+                    <CustomProgress value={scanProgress} />
+                  </div>
                 </div>
               )}
 
@@ -712,18 +935,18 @@ const Hero = () => {
               {[
                 {
                   icon: <Zap className="w-8 h-8" />,
-                  title: "Fast Scanning",
-                  description: "Quick scans complete in minutes with optimized engines"
+                  title: "Real-Time Scanning",
+                  description: "Live updates via WebSocket with detailed progress tracking"
                 },
                 {
                   icon: <Brain className="w-8 h-8" />,
-                  title: "AI-Powered Analysis",
-                  description: "Advanced ML algorithms for intelligent vulnerability detection"
+                  title: "Multi-Stage Analysis",
+                  description: "Three-stage scanning with AI-powered vulnerability assessment"
                 },
                 {
-                  icon: <FileText className="w-8 h-8" />,
-                  title: "Detailed Reporting",
-                  description: "Comprehensive reports with actionable remediation steps"
+                  icon: <Terminal className="w-8 h-8" />,
+                  title: "Command Center",
+                  description: "Professional terminal interface with real-time logs and status"
                 }
               ].map((feature, index) => (
                 <motion.div 

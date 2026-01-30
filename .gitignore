@@ -1,0 +1,16 @@
+# Go build & logs
+*.log
+
+# Scanner runtime outputs
+targets_scan_*.txt
+resume.cfg
+scan_*
+output/
+
+# Environment
+.env
+
+# Node / Frontend
+node_modules/
+.next/
+dist/
