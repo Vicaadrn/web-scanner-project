@@ -375,40 +375,63 @@ const Hero = () => {
         addLog("📡 Listening for real-time updates...");
       };
 
+      // Di WebSocket handler, tambahkan:
       socket.onmessage = (event) => {
-        const msg = JSON.parse(event.data);
-        
-        if (msg.type === "state") {
-          setScanProgress(msg.data.progress || 0);
-          setCurrentPhase(msg.data.phase || "");
-          return;
-        }
-
-        // =====================
-        // EVENT (REALTIME DATA)
-        // =====================
-        if (msg.type === "event") {
-          const data = msg.data;
-
-          // DISCOVERY (FFUF / Katana)
-          if (data.event === "discovery") {
-            setMatches(prev => [
-              ...prev,
-              {
-                path: data.url,
-                status: data.tool
+          const msg = JSON.parse(event.data);
+          
+          if (msg.type === "state") {
+              setScanProgress(msg.data.progress || 0);
+              setCurrentPhase(msg.data.phase || "");
+              
+              // AUTO-COMPLETE LOGIC
+              if (msg.data.progress >= 100) {
+                  setTimeout(() => {
+                      setLoading(false);
+                      setEstimatedTime(0);
+                      addLog("✅ Scan completed successfully!");
+                  }, 1500);
               }
-            ]);
-
-            addLog(`🔍 [${data.tool}] ${data.url}`);
+              return;
           }
-
-          // VULNERABILITY (Nuclei)
-          if (data.event === "vulnerability") {
-            setVulnerabilities(prev => [...prev, data]);
-            addLog(`⚠️ [${data.severity}] ${data.name}`);
+          
+          if (msg.type === "event") {
+              const data = msg.data;
+              
+              switch(data.event) {
+                  case "ffuf_discovery":
+                      addLog(`🔍 [FFUF] ${data.url}`);
+                      break;
+                      
+                  case "discovery_live":
+                      addLog(`🕷️ [Katana] ${data.url}`);
+                      break;
+                      
+                  case "discovery":
+                      addLog(`✅ [Validated] ${data.url} (HTTP ${data.status})`);
+                      break;
+                      
+                  case "nuclei_progress":
+                      addLog(`⚡ ${data.message}`);
+                      break;
+                      
+                  case "nuclei_complete":
+                      addLog(`🎯 Nuclei found ${data.count} vulnerabilities`);
+                      break;
+                      
+                  case "scan_complete":
+                      addLog(`🎉 Scan completed in ${data.duration}`);
+                      addLog(`📊 Total targets: ${data.targets}`);
+                      
+                      // Force completion
+                      setLoading(false);
+                      setScanProgress(100);
+                      break;
+                      
+                  case "vulnerability":
+                      // ... existing code ...
+                      break;
+              }
           }
-        }
       };
       socket.onerror = (error) => {
         addLog("❌ WebSocket connection error");

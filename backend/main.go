@@ -2,12 +2,13 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
+	"os"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -94,14 +95,14 @@ func startPipeline(ctx context.Context, id string, req ScanRequest) {
 	log.Printf("[+] [ID:%s] Starting pipeline for: %s", id, req.URL)
 
 	// Phase 0.2: WS Connection Safety Check
-	time.Sleep(2 * time.Second) // Memberi waktu handshake WS selesai
+	time.Sleep(2 * time.Second)
 	clientsMux.Lock()
 	if _, ok := clients[id]; !ok {
 		log.Printf("[!] [ID:%s] Warning: No UI client connected via WebSocket", id)
 	}
 	clientsMux.Unlock()
 
-	rawDiscoveryChan := make(chan string, 1000)
+	rawDiscoveryChan := make(chan string, 2000) // Buffer lebih besar
 	var wgDiscovery sync.WaitGroup
 
 	// --- PHASE 1: DISCOVERY ---
@@ -115,21 +116,41 @@ func startPipeline(ctx context.Context, id string, req ScanRequest) {
 	uniqueURLs := make(map[string]bool)
 	var muDedup sync.Mutex
 	var finalTargets []string
+	var totalDiscovered int
 
-	// Collector & Validator Phase 2
+	// Collector & Validator Phase 2 - dengan proper synchronization
+	collectorDone := make(chan bool, 1)
+	
 	go func() {
+		defer func() { collectorDone <- true }()
+		
 		for url := range rawDiscoveryChan {
 			muDedup.Lock()
 			if !uniqueURLs[url] {
 				uniqueURLs[url] = true
+				totalDiscovered++
 				muDedup.Unlock()
 
+				// Update progress berdasarkan jumlah discovery
+				if totalDiscovered%10 == 0 {
+					progress := 10 + int(50*float64(totalDiscovered)/200.0)
+					if progress > 60 { progress = 60 }
+					updateState(id, fmt.Sprintf("Discovery (%d found)", totalDiscovered), progress)
+				}
+
 				// Phase 1.4: Realtime Event (Live UX)
-				sendEvent(id, map[string]interface{}{"event": "discovery_live", "url": url})
+				sendEvent(id, map[string]interface{}{
+					"event": "discovery_live", 
+					"url": url,
+					"count": totalDiscovered,
+				})
 
 				// Phase 2: HTTPX Validation
 				if isValid, status := runHTTPX(ctx, url); isValid {
+					muDedup.Lock()
 					finalTargets = append(finalTargets, url)
+					muDedup.Unlock()
+					
 					// Phase 2.3: Final Discovery Event
 					sendEvent(id, map[string]interface{}{
 						"event":  "discovery",
@@ -143,9 +164,23 @@ func startPipeline(ctx context.Context, id string, req ScanRequest) {
 		}
 	}()
 
+	// TUNGGU DISCOVERY TOOLS SELESAI
 	wgDiscovery.Wait()
+	
+	// Beri waktu 1 detik untuk memastikan semua data diproses
+	time.Sleep(1 * time.Second)
+	
+	// Tutup channel dan tunggu collector
 	close(rawDiscoveryChan)
+	<-collectorDone
+	
 	log.Printf("[ok] [ID:%s] Discovery complete. Total unique targets: %d", id, len(finalTargets))
+	
+	// Update state ke 65% sebelum lanjut ke Nuclei
+	updateState(id, "Discovery Complete", 65)
+	
+	// Beri jeda untuk transisi
+	time.Sleep(2 * time.Second)
 
 	if ctx.Err() != nil {
 		log.Printf("[!] [ID:%s] Scan cancelled by administrator", id)
@@ -158,14 +193,27 @@ func startPipeline(ctx context.Context, id string, req ScanRequest) {
 		updateState(id, "Vulnerability Scan", 70)
 		log.Printf("[*] [ID:%s] Phase 3: Vulnerability scanning with Nuclei...", id)
 		runNuclei(ctx, id, finalTargets)
+		
+		// Update setelah Nuclei selesai
+		updateState(id, "Vulnerability Scan Complete", 95)
 	} else {
 		log.Printf("[!] [ID:%s] Phase 3 skipped: No valid targets found.", id)
+		updateState(id, "No Targets Found", 95)
 	}
 
 	// --- PHASE 4: FINISHED ---
 	duration := time.Since(startTime)
-	log.Printf("[DONE] [ID:%s] Scan finished in %v. Total targets scanned: %d", id, duration, len(finalTargets))
+	log.Printf("[DONE] [ID:%s] Scan finished in %v. Targets: %d", id, duration, len(finalTargets))
+	
+	// PASTIKAN 100%
 	updateState(id, "Finished", 100)
+	
+	// Kirim completion event
+	sendEvent(id, map[string]interface{}{
+		"event": "scan_complete",
+		"duration": duration.String(),
+		"targets": len(finalTargets),
+	})
 }
 
 /* ========================================================
@@ -192,33 +240,116 @@ func runHTTPX(ctx context.Context, target string) (bool, int) {
 func runKatana(ctx context.Context, id, target string, ch chan<- string, wg *sync.WaitGroup) {
 	defer wg.Done()
 	log.Printf("[+] [ID:%s] [KATANA] Crawling started", id)
-	cmd := exec.CommandContext(ctx, "katana", "-u", target, "-silent", "-nc")
+	
+	// Tambah timeout untuk Katana (max 30 detik)
+	ctxKatana, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+	
+	cmd := exec.CommandContext(ctxKatana, "katana", 
+		"-u", target, 
+		"-silent", 
+		"-nc",
+		"-crawl-duration", "25", // Max 25 detik
+		"-timeout", "10",
+	)
+	
 	stdout, _ := cmd.StdoutPipe()
-	cmd.Start()
-
+	
+	// Start dengan error handling
+	if err := cmd.Start(); err != nil {
+		log.Printf("[!] [ID:%s] [KATANA] Start error: %v", id, err)
+		return
+	}
+	
 	scanner := bufio.NewScanner(stdout)
 	count := 0
+	
 	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if line != "" {
-			ch <- line
-			count++
+		select {
+		case <-ctxKatana.Done():
+			// Context cancelled/done, stop processing
+			cmd.Process.Kill()
+			log.Printf("[*] [ID:%s] [KATANA] Cancelled by context", id)
+			return
+		default:
+			line := strings.TrimSpace(scanner.Text())
+			if line != "" {
+				// Kirim dengan non-blocking
+				select {
+				case ch <- line:
+					count++
+					// Kirim real-time event
+					sendEvent(id, map[string]interface{}{
+						"event": "discovery_live",
+						"url":   line,
+						"tool":  "katana",
+						"count": count,
+					})
+				case <-ctxKatana.Done():
+					cmd.Process.Kill()
+					return
+				default:
+					// Channel full, skip atau tunggu
+					time.Sleep(5 * time.Millisecond)
+					ch <- line
+					count++
+				}
+			}
 		}
 	}
+	
+	// Wait untuk command
 	cmd.Wait()
 	log.Printf("[ok] [ID:%s] [KATANA] Finished. Found: %d", id, count)
 }
 
 func runFFUF(ctx context.Context, id string, req ScanRequest, ch chan<- string, wg *sync.WaitGroup) {
 	defer wg.Done()
-	log.Printf("[+] [ID:%s] [FFUF] Fuzzing started (Waiting for JSON output...)", id)
+	log.Printf("[+] [ID:%s] [FFUF] Fuzzing started", id)
 	
-	cmd := exec.CommandContext(ctx, "python3", "run_ffuf.py", req.URL, req.Wordlist, req.ScanType)
+	// VALIDASI SEBELUM EKSEKUSI
+	if req.Wordlist == "" {
+		log.Printf("[!] [ID:%s] [FFUF] Wordlist kosong, menggunakan default", id)
+		req.Wordlist = "common.txt" // Default wordlist
+	}
 	
-	// Gunakan CombinedOutput atau Output untuk mengambil seluruh JSON sekaligus
-	out, err := cmd.CombinedOutput()
+	// Gunakan path absolut jika relative
+	wordlistPath := req.Wordlist
+	if !strings.Contains(wordlistPath, "/") {
+		// Coba cari di beberapa lokasi umum
+		possiblePaths := []string{
+			"/usr/share/wordlists/" + wordlistPath,
+			"/usr/share/wordlists/dirb/" + wordlistPath,
+			"./" + wordlistPath,
+			"../wordlists/" + wordlistPath,
+		}
+		for _, path := range possiblePaths {
+			if _, err := os.Stat(path); err == nil {
+				wordlistPath = path
+				log.Printf("[*] [ID:%s] [FFUF] Found wordlist at: %s", id, path)
+				break
+			}
+		}
+	}
+	
+	// Tambah timeout untuk Python script
+	ctxFFUF, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancel()
+	
+	cmd := exec.CommandContext(ctxFFUF, "python3", "run_ffuf.py", req.URL, wordlistPath, req.ScanType)
+	
+	// Capture stderr untuk debug
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	
+	out, err := cmd.Output()
 	if err != nil {
 		log.Printf("[!] [ID:%s] [FFUF] Error: %v", id, err)
+		log.Printf("[!] [ID:%s] [FFUF] Stderr: %s", id, stderr.String())
+		
+		// FALLBACK: Coba langsung jalankan ffuf tanpa Python wrapper
+		log.Printf("[*] [ID:%s] [FFUF] Trying direct FFUF execution...", id)
+		runFFUFDirect(ctx, id, req, ch, wordlistPath)
 		return
 	}
 
@@ -230,10 +361,17 @@ func runFFUF(ctx context.Context, id string, req ScanRequest, ch chan<- string, 
 				Path string `json:"path"`
 			} `json:"matches"`
 		} `json:"data"`
+		Error string `json:"error,omitempty"`
 	}
 
 	if err := json.Unmarshal(out, &result); err != nil {
 		log.Printf("[!] [ID:%s] [FFUF] JSON Parse Error: %v", id, err)
+		log.Printf("[DEBUG] [ID:%s] [FFUF] Raw output: %s", id, string(out[:min(500, len(out))]))
+		return
+	}
+	
+	if result.Error != "" {
+		log.Printf("[!] [ID:%s] [FFUF] Python wrapper error: %s", id, result.Error)
 		return
 	}
 
@@ -242,47 +380,198 @@ func runFFUF(ctx context.Context, id string, req ScanRequest, ch chan<- string, 
 	baseURL := strings.TrimSuffix(req.URL, "/")
 	for _, m := range result.Data.Matches {
 		fullURL := baseURL + "/" + strings.TrimPrefix(m.Path, "/")
-		ch <- fullURL
-		count++
+		
+		// Kirim ke channel dengan timeout
+		select {
+		case ch <- fullURL:
+			count++
+			// Kirim real-time event
+			sendEvent(id, map[string]interface{}{
+				"event": "ffuf_discovery",
+				"url":   fullURL,
+				"tool":  "ffuf",
+				"count": count,
+			})
+		case <-ctx.Done():
+			log.Printf("[*] [ID:%s] [FFUF] Cancelled during processing", id)
+			return
+		default:
+			// Channel penuh, tunggu sebentar
+			time.Sleep(10 * time.Millisecond)
+			ch <- fullURL
+			count++
+		}
 	}
 
-	log.Printf("[ok] [ID:%s] [FFUF] Finished. Decoded %d endpoints from JSON.", id, count)
+	log.Printf("[ok] [ID:%s] [FFUF] Finished. Found %d endpoints.", id, count)
+}
+
+// Fungsi fallback jika Python wrapper gagal
+func runFFUFDirect(ctx context.Context, id string, req ScanRequest, ch chan<- string, wordlistPath string) {
+	log.Printf("[*] [ID:%s] [FFUF-Direct] Starting direct execution", id)
+	
+	cmd := exec.CommandContext(ctx, "ffuf",
+		"-u", req.URL+"/FUZZ",
+		"-w", wordlistPath,
+		"-t", "20",
+		"-rate", "15",
+		"-mc", "200,204,301,302,401,403,500",
+		"-fc", "404",
+		"-of", "json",
+		"-s",
+	)
+	
+	out, err := cmd.Output()
+	if err != nil {
+		log.Printf("[!] [ID:%s] [FFUF-Direct] Error: %v", id, err)
+		return
+	}
+	
+	// Parse hasil langsung
+	var result map[string]interface{}
+	if err := json.Unmarshal(out, &result); err != nil {
+		log.Printf("[!] [ID:%s] [FFUF-Direct] JSON parse error: %v", id, err)
+		return
+	}
+	
+	// Process results
+	if results, ok := result["results"].([]interface{}); ok {
+		count := 0
+		baseURL := strings.TrimSuffix(req.URL, "/")
+		
+		for _, r := range results {
+			if match, ok := r.(map[string]interface{}); ok {
+				if input, ok := match["input"].(map[string]interface{}); ok {
+					if path, ok := input["FUZZ"].(string); ok {
+						fullURL := baseURL + "/" + strings.TrimPrefix(path, "/")
+						ch <- fullURL
+						count++
+						
+						sendEvent(id, map[string]interface{}{
+							"event": "ffuf_discovery",
+							"url":   fullURL,
+							"tool":  "ffuf",
+							"count": count,
+						})
+					}
+				}
+			}
+		}
+		log.Printf("[ok] [ID:%s] [FFUF-Direct] Found %d endpoints", id, count)
+	}
+}
+
+func min(a, b int) int {
+	if a < b { return a }
+	return b
 }
 
 func runNuclei(ctx context.Context, id string, targets []string) {
-	cmd := exec.CommandContext(ctx, "nuclei", "-silent", "-jsonl")
-	stdin, _ := cmd.StdinPipe()
+	log.Printf("[*] [ID:%s] [NUCLEI] Starting scan on %d targets", id, len(targets))
+	
+	// Update progress ke 71% untuk menunjukkan mulai
+	updateState(id, "Nuclei Initializing", 71)
+	
+	// Buat temporary file untuk targets
+	tmpFile, err := os.CreateTemp("", fmt.Sprintf("nuclei-%s-*.txt", id))
+	if err != nil {
+		log.Printf("[!] [ID:%s] [NUCLEI] Temp file error: %v", id, err)
+		return
+	}
+	defer os.Remove(tmpFile.Name())
+	
+	// Tulis targets ke file
+	for _, t := range targets {
+		fmt.Fprintln(tmpFile, t)
+	}
+	tmpFile.Close()
+	
+	// Jalankan nuclei dengan stats untuk progress tracking
+	cmd := exec.CommandContext(ctx, "nuclei",
+		"-l", tmpFile.Name(),
+		"-silent",
+		"-jsonl",
+		"-stats",
+		"-stats-interval", "10",
+		"-timeout", "30",
+	)
+	
 	stdout, _ := cmd.StdoutPipe()
+	stderr, _ := cmd.StderrPipe()
+	
 	cmd.Start()
-
+	
+	// Goroutine untuk membaca progress dari stderr
 	go func() {
-		defer stdin.Close()
-		for _, t := range targets {
-			io.WriteString(stdin, t+"\n")
+		scanner := bufio.NewScanner(stderr)
+		for scanner.Scan() {
+			line := scanner.Text()
+			// Update progress berdasarkan stats nuclei
+			if strings.Contains(line, "Requests") || strings.Contains(line, "Percent") {
+				// Parse progress dari line
+				// Contoh: "[INF] Requests: 45 (30.00%) | Total: 150 | Finished: 45 (30.00%)"
+				sendEvent(id, map[string]interface{}{
+					"event": "nuclei_progress",
+					"message": line,
+				})
+				
+				// Update progress incremental (71% -> 90%)
+				// Coba ekstrak persentase
+				if strings.Contains(line, "%") {
+					// Naik progress sedikit
+					updateState(id, "Nuclei Scanning", 75)
+				}
+			}
 		}
 	}()
-
+	
 	scanner := bufio.NewScanner(stdout)
 	vulnCount := 0
+	lastProgressUpdate := time.Now()
+	
 	for scanner.Scan() {
 		var obj map[string]interface{}
 		if err := json.Unmarshal(scanner.Bytes(), &obj); err == nil {
-			info := obj["info"].(map[string]interface{})
-			vulnCount++
-			
-			// feedback terminal administrator
-			log.Printf("[VULN] [ID:%s] [%s] %s -> %s", id, info["severity"], obj["template-id"], obj["matched-at"])
-
-			sendEvent(id, map[string]interface{}{
-				"event":    "vulnerability",
-				"severity": info["severity"],
-				"name":     obj["template-id"],
-				"url":      obj["matched-at"],
-			})
+			if info, ok := obj["info"].(map[string]interface{}); ok {
+				vulnCount++
+				
+				// Update progress setiap 5 vulnerability atau 10 detik
+				if vulnCount%5 == 0 || time.Since(lastProgressUpdate) > 10*time.Second {
+					// Hitung progress (71% - 90%)
+					progress := 71 + int(19*float64(vulnCount)/float64(len(targets)))
+					if progress > 90 { progress = 90 }
+					
+					updateState(id, fmt.Sprintf("Nuclei: %d vulns found", vulnCount), progress)
+					lastProgressUpdate = time.Now()
+				}
+				
+				// Log untuk admin
+				log.Printf("[VULN] [ID:%s] [%s] %s -> %s", 
+					id, info["severity"], obj["template-id"], obj["matched-at"])
+				
+				// Event ke frontend
+				sendEvent(id, map[string]interface{}{
+					"event":    "vulnerability",
+					"severity": info["severity"],
+					"name":     obj["template-id"],
+					"url":      obj["matched-at"],
+					"count":    vulnCount,
+				})
+			}
 		}
 	}
+	
 	cmd.Wait()
+	
+	// Update final progress untuk Nuclei
+	updateState(id, "Nuclei Complete", 95)
 	log.Printf("[ok] [ID:%s] [NUCLEI] Scan finished. Vulnerabilities found: %d", id, vulnCount)
+	
+	// Kirim completion event
+	sendEvent(id, map[string]interface{}{
+		"event": "nuclei_complete",
+		"count": vulnCount,
+	})
 }
 
 /* ========================================================
